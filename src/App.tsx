@@ -54,7 +54,7 @@ function App() {
           background: '#fee2e2', color: '#dc2626', padding: '1rem', textAlign: 'center',
           fontWeight: 800, borderBottom: '2px solid #ef4444'
         }}>
-          ⚠️ Build v1.0.2: Configuration Missing. Please verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.
+          ⚠️ Build v1.0.3: Configuration Missing. Please verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.
         </div>
       )}
       <Toaster position="top-right" richColors />

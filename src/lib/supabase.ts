@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const env = import.meta.env;
+const supabaseUrl = env.VITE_SUPABASE_URL;
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY;
 
-// Diagnostic logs (visible in browser console F12)
+// diagnostic: Log keys to see what Vite actually detected
+console.log('Vite detected keys:', Object.keys(env).filter(k => k.startsWith('VITE_')));
 console.log('System Check: URL present?', !!supabaseUrl);
 console.log('System Check: Key present?', !!supabaseAnonKey);
 
