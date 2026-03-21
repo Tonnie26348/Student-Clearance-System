@@ -3,12 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Fail-safe initialization to prevent hard crash on Vercel
-const isConfigured = supabaseUrl && supabaseUrl.startsWith('http');
+// Diagnostic logs (visible in browser console F12)
+console.log('System Check: URL present?', !!supabaseUrl);
+console.log('System Check: Key present?', !!supabaseAnonKey);
 
-if (!isConfigured) {
-  console.error('CRITICAL: Supabase environment variables are missing or invalid.');
-}
+const isConfigured = Boolean(supabaseUrl && supabaseUrl.startsWith('http'));
 
 export const supabase = createClient(
     isConfigured ? supabaseUrl : 'https://placeholder-project.supabase.co', 
