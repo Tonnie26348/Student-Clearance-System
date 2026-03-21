@@ -56,22 +56,23 @@ function App() {
                 <StudentDashboard />
               </ProtectedRoute>
             } />
-...
-          <Route path="/staff" element={
-            <ProtectedRoute requiredRole="staff">
-              <StaffDashboard />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin" element={
-            <ProtectedRoute requiredRole="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+
+            <Route path="/staff" element={
+              <ProtectedRoute requiredRole="staff">
+                <StaffDashboard />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </AnimatePresence>
       </Router>
     </AuthProvider>
   );

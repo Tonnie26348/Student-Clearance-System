@@ -4,10 +4,9 @@ import { useAuth } from '../lib/AuthContext';
 import Navbar from '../components/Navbar';
 import ProgressBar from '../components/ProgressBar';
 import StatusCard from '../components/StatusCard';
-import { Download, PlayCircle, User, Upload, FileText, History } from 'lucide-react';
+import { Download, PlayCircle, User, Upload, FileText, History, Info } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 
 interface ClearanceStatus {
   id: string; department: { name: string }; status: 'pending' | 'approved' | 'rejected'; comments: string | null; attachment_url?: string | null;
@@ -42,8 +41,11 @@ export default function StudentDashboard() {
 
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    const promise = supabase.from('profiles').update(profile).eq('id', user?.id);
-    toast.promise(promise, { loading: 'Updating...', success: 'Saved!', error: 'Failed' });
+    const promise = async () => {
+        const { error } = await supabase.from('profiles').update(profile).eq('id', user?.id);
+        if (error) throw error;
+    };
+    toast.promise(promise(), { loading: 'Updating...', success: 'Saved!', error: 'Failed' });
   }
 
   const fetchClearanceData = async () => {

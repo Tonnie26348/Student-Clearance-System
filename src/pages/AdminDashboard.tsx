@@ -22,7 +22,6 @@ interface Department {
 export default function AdminDashboard() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'users' | 'depts' | 'stats'>('stats');
   const [newDeptName, setNewDeptName] = useState('');
 
@@ -31,24 +30,26 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
     const { data: profiles } = await supabase.from('profiles').select('*');
     const { data: depts } = await supabase.from('departments').select('*');
     
     if (profiles) setUsers(profiles as UserProfile[]);
     if (depts) setDepartments(depts as Department[]);
-    setLoading(false);
   };
 
   const updateRole = async (userId: string, role: string, deptId: string | null = null) => {
-    const promise = supabase
-      .from('profiles')
-      .update({ role, department_id: deptId })
-      .eq('id', userId);
+    const promise = async () => {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ role, department_id: deptId })
+            .eq('id', userId);
+        if (error) throw error;
+        await fetchData();
+    };
 
-    toast.promise(promise, {
+    toast.promise(promise(), {
         loading: 'Updating permissions...',
-        success: () => { fetchData(); return 'User permissions updated!'; },
+        success: 'User permissions updated!',
         error: 'Failed to update'
     });
   };
@@ -82,7 +83,7 @@ export default function AdminDashboard() {
         u.email || 'N/A',
         u.reg_number || 'N/A',
         u.role,
-        'N/A' // In a full implementation, we'd join with clearance status
+        'N/A'
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," 

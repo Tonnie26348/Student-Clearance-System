@@ -3,7 +3,7 @@ import { useAuth } from '../lib/AuthContext';
 import { useProfile } from '../lib/useProfile';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
-  LogOut, GraduationCap, LayoutDashboard, Settings, 
+  LogOut, GraduationCap, LayoutDashboard, 
   Bell, CheckCircle, XCircle, Info, Menu, X, Shield, Building, Moon, Sun
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -61,7 +61,7 @@ export default function Navbar() {
     <>
       <aside className="sidebar-desktop">
         <div className="sidebar-brand">
-            <div className="brand-logo"><GraduationCap size={28} weight="bold" /></div>
+            <div className="brand-logo"><GraduationCap size={28} /></div>
             <div className="brand-info">
                 <span>ClearanceHub</span>
                 <small>University Portal</small>
