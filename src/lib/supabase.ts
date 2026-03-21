@@ -3,13 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('CRITICAL: Missing Supabase environment variables. Check your .env file.');
+// Fail-safe initialization to prevent hard crash on Vercel
+const isConfigured = supabaseUrl && supabaseUrl.startsWith('http');
+
+if (!isConfigured) {
+  console.error('CRITICAL: Supabase environment variables are missing or invalid.');
 }
 
-// Create client even if variables are missing to avoid top-level crash, 
-// though calls will fail later.
 export const supabase = createClient(
-    supabaseUrl || 'https://placeholder.supabase.co', 
-    supabaseAnonKey || 'placeholder-key'
+    isConfigured ? supabaseUrl : 'https://placeholder-project.supabase.co', 
+    isConfigured ? supabaseAnonKey : 'placeholder-key'
 );
+
+export const checkConfig = () => isConfigured;

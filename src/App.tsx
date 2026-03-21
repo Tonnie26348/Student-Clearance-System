@@ -7,12 +7,13 @@ import StaffDashboard from './pages/StaffDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import { Toaster } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { checkConfig } from './lib/supabase';
 import './App.css';
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole: 'student' | 'staff' | 'admin' }) {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
-
+  
   if (authLoading || profileLoading) return (
     <div className="loading-screen">
       <motion.div 
@@ -23,7 +24,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode,
       <p>Verifying Access...</p>
     </div>
   );
-
+  
   if (!user) return <Navigate to="/login" replace />;
 
   if (profile?.role !== requiredRole && profile?.role !== 'admin') {
@@ -43,8 +44,19 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode,
 }
 
 function App() {
+  const isConfigured = checkConfig();
+
   return (
     <AuthProvider>
+      {!isConfigured && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+          background: '#fee2e2', color: '#dc2626', padding: '1rem', textAlign: 'center',
+          fontWeight: 800, borderBottom: '2px solid #ef4444'
+        }}>
+          ⚠️ System Configuration Incomplete: Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to Vercel Environment Variables.
+        </div>
+      )}
       <Toaster position="top-right" richColors />
       <Router>
         <AnimatePresence mode="wait">
