@@ -1,0 +1,41 @@
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--bg-app);
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-light);
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+/* Sidebar Layout Offset */
+.dashboard-container, .staff-dashboard, .admin-container {
+    padding-left: 280px; /* Width of desktop sidebar */
+    min-height: 100vh;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-container, .staff-dashboard, .admin-container {
+        padding-left: 0;
+        padding-top: 64px; /* Height of mobile top header */
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
