@@ -65,27 +65,32 @@ export default function StaffDashboard() {
   }, [profile?.department_id]);
 
   const fetchPendingRequests = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('clearance_status')
-      .select(`
-        id,
-        status,
-        comments,
-        attachment_url,
-        updated_at,
-        request:clearance_requests(
-          student_id,
-          student:profiles(email, full_name, reg_number)
-        )
-      `)
-      .eq('department_id', profile?.department_id)
-      .order('updated_at', { ascending: false });
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('clearance_status')
+        .select(`
+          id,
+          status,
+          comments,
+          attachment_url,
+          updated_at,
+          request:clearance_requests(
+            student_id,
+            student:profiles(email, full_name, reg_number)
+          )
+        `)
+        .eq('department_id', profile?.department_id)
+        .order('updated_at', { ascending: false });
 
-    if (!error) {
-      setRequests(data as any);
+      if (error) throw error;
+      if (data) setRequests(data as any);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      toast.error('Failed to load requests');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const updateStatus = async (id: string, studentId: string, newStatus: 'approved' | 'rejected', comments: string = '') => {

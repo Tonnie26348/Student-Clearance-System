@@ -54,8 +54,18 @@ export default function StudentDashboard() {
   }, [user]);
 
   const fetchProfile = async () => {
-    const { data } = await supabase.from('profiles').select('full_name, reg_number').eq('id', user?.id).single();
-    if (data) setProfile({ full_name: data.full_name || '', reg_number: data.reg_number || '' });
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, reg_number')
+        .eq('id', user?.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      if (data) setProfile({ full_name: data.full_name || '', reg_number: data.reg_number || '' });
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
   }
 
   const updateProfile = async (e: React.FormEvent) => {
@@ -72,14 +82,32 @@ export default function StudentDashboard() {
   }
 
   const fetchClearanceData = async () => {
-    setLoading(true);
-    const { data: request } = await supabase.from('clearance_requests').select('id').eq('student_id', user?.id).single();
-    if (request) {
-      setRequestId(request.id);
-      const { data } = await supabase.from('clearance_status').select(`id, status, comments, attachment_url, department:departments(name)`).eq('request_id', request.id);
-      if (data) setStatuses(data as any);
+    try {
+      setLoading(true);
+      const { data: request, error: reqError } = await supabase
+        .from('clearance_requests')
+        .select('id')
+        .eq('student_id', user?.id)
+        .maybeSingle();
+
+      if (reqError) throw reqError;
+
+      if (request) {
+        setRequestId(request.id);
+        const { data, error: statusError } = await supabase
+          .from('clearance_status')
+          .select(`id, status, comments, attachment_url, department:departments(name)`)
+          .eq('request_id', request.id);
+
+        if (statusError) throw statusError;
+        if (data) setStatuses(data as any);
+      }
+    } catch (error) {
+      console.error('Error fetching clearance data:', error);
+      toast.error('Failed to load clearance status');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const startClearance = async () => {
