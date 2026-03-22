@@ -3,11 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 const rawUrl = import.meta.env.VITE_SUPABASE_URL;
 const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Trim whitespace which often causes fetch "Invalid value" errors
-const supabaseUrl = rawUrl?.trim();
-const supabaseAnonKey = rawKey?.trim();
+/**
+ * Aggressively cleans strings of all whitespace, newlines, and hidden characters 
+ * (like zero-width spaces) which frequently cause fetch "Invalid value" errors.
+ */
+const clean = (str: string | undefined) => str ? str.replace(/[\s\u200B-\u200D\uFEFF]/g, '') : '';
 
-// Enhanced check
+const supabaseUrl = clean(rawUrl);
+const supabaseAnonKey = clean(rawKey);
+
 export const isConfigured = Boolean(
     supabaseUrl && 
     supabaseAnonKey && 
@@ -16,16 +20,25 @@ export const isConfigured = Boolean(
     supabaseUrl.includes('.supabase.co')
 );
 
-if (!isConfigured) {
-    console.warn('Supabase configuration is missing or invalid. Check your .env file.');
-    console.log('Configuration details:', { 
-        hasUrl: !!supabaseUrl, 
-        hasKey: !!supabaseAnonKey,
-        validUrlFormat: supabaseUrl?.startsWith('http')
+// Diagnostic logging for debugging "Invalid value" fetch errors
+if (isConfigured) {
+    console.log('🚀 Supabase client initialized:', {
+        urlLength: supabaseUrl.length,
+        keyLength: supabaseAnonKey.length,
+        urlValid: supabaseUrl.startsWith('https://')
     });
+} else {
+    console.warn('⚠️ Supabase configuration missing or invalid.');
 }
 
 export const supabase = createClient(
     isConfigured ? supabaseUrl : 'https://placeholder.supabase.co', 
-    isConfigured ? supabaseAnonKey : 'placeholder-key'
+    isConfigured ? supabaseAnonKey : 'placeholder-key',
+    {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+        }
+    }
 );
