@@ -90,26 +90,13 @@ export default function StudentDashboard() {
 
     const promise = new Promise(async (resolve, reject) => {
         // 1. Create the main request
-        const { data: req, error: reqErr } = await supabase.from('clearance_requests').insert({ student_id: user.id }).select().single();
+        // The database trigger public.create_clearance_statuses() will automatically
+        // create all department status entries.
+        const { error: reqErr } = await supabase
+            .from('clearance_requests')
+            .insert({ student_id: user.id });
+
         if (reqErr) return reject(reqErr);
-
-        // 2. Get all available departments
-        const { data: depts, error: deptErr } = await supabase.from('departments').select('id');
-        if (deptErr) return reject(deptErr);
-
-        if (depts && depts.length > 0) {
-            // 3. Create status entries for each department
-            const { error: statusErr } = await supabase.from('clearance_status').insert(
-                depts.map(d => ({ 
-                    request_id: req.id, 
-                    department_id: d.id, 
-                    status: 'pending' 
-                }))
-            );
-            if (statusErr) return reject(statusErr);
-        } else {
-            return reject(new Error('No departments found in the system.'));
-        }
 
         await fetchClearanceData();
         resolve(true);

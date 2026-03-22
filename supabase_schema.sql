@@ -81,8 +81,29 @@ CREATE POLICY "Staff can update status for their department"
 ON public.clearance_status FOR UPDATE 
 USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND (role = 'admin' OR (role = 'staff' AND department_id = clearance_status.department_id))));
 
+CREATE POLICY "Students can insert their own status entries" 
+ON public.clearance_status FOR INSERT 
+WITH CHECK (EXISTS (SELECT 1 FROM public.clearance_requests WHERE id = request_id AND student_id = auth.uid()));
 
--- 5. Trigger to automatically create a profile for new users
+
+-- 5. Trigger to automatically create status rows for all departments when a request is created
+CREATE OR REPLACE FUNCTION public.create_clearance_statuses()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.clearance_status (request_id, department_id, status)
+  SELECT NEW.id, id, 'pending'
+  FROM public.departments;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS tr_create_clearance_statuses ON public.clearance_requests;
+CREATE TRIGGER tr_create_clearance_statuses
+  AFTER INSERT ON public.clearance_requests
+  FOR EACH ROW EXECUTE FUNCTION public.create_clearance_statuses();
+
+
+-- 6. Trigger to automatically create a profile for new users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
