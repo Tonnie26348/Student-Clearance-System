@@ -15,25 +15,30 @@ export default function Login() {
     e.preventDefault();
 
     if (!isConfigured) {
-        toast.error('System is not correctly configured. Please check your Supabase credentials in the .env file.');
+        toast.error('System is not correctly configured. Please check your credentials in the .env file.');
         return;
     }
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    // ...
-```
-      toast.error(error.message);
-      setLoading(false);
-    } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-        if (profile?.role === 'staff') navigate('/staff');
-        else if (profile?.role === 'admin') navigate('/admin');
-        else navigate('/student');
-      }
+    try {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+            toast.error(error.message);
+            setLoading(false);
+        } else {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+                if (profile?.role === 'staff') navigate('/staff');
+                else if (profile?.role === 'admin') navigate('/admin');
+                else navigate('/student');
+            }
+        }
+    } catch (err: any) {
+        toast.error(err.message || 'An unexpected error occurred');
+        setLoading(false);
     }
   };
 
@@ -93,7 +98,7 @@ export default function Login() {
         @media (max-width: 900px) { .auth-visual { display: none; } }
 
         .auth-visual {
-            flex: 1.2; background: var(--primary); color: white; padding: 4rem;
+            flex: 1.2; background: #4f46e5; color: white; padding: 4rem;
             display: flex; flex-direction: column; justify-content: center; position: relative;
             background-image: radial-gradient(circle at top right, rgba(255,255,255,0.1), transparent);
         }
@@ -103,30 +108,30 @@ export default function Login() {
         .visual-footer { position: absolute; bottom: 3rem; left: 4rem; }
         .trusted-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 99px; font-weight: 700; font-size: 0.85rem; }
 
-        .auth-form-side { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; background: var(--bg-app); }
-        .form-container { width: 100%; max-width: 420px; background: white; padding: 3rem; border-radius: 24px; box-shadow: var(--shadow-lg); }
+        .auth-form-side { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; background: #f8fafc; }
+        .form-container { width: 100%; max-width: 420px; background: white; padding: 3rem; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
         
         .form-header h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
-        .form-header p { color: var(--text-muted); margin-bottom: 2.5rem; font-weight: 500; }
+        .form-header p { color: #64748b; margin-bottom: 2.5rem; font-weight: 500; }
 
         .premium-form { display: flex; flex-direction: column; gap: 1.5rem; }
         .input-group-premium { display: flex; flex-direction: column; gap: 0.5rem; }
-        .input-group-premium label { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.85rem; color: var(--text-main); }
-        .input-group-premium input { padding: 0.85rem 1rem; border-radius: 12px; border: 1.5px solid var(--border-main); font-size: 1rem; transition: all 0.2s; font-family: var(--font-main); }
-        .input-group-premium input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); outline: none; }
+        .input-group-premium label { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.85rem; color: #1e293b; }
+        .input-group-premium input { padding: 0.85rem 1rem; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; transition: all 0.2s; }
+        .input-group-premium input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); outline: none; }
 
         .btn-auth-premium {
-            margin-top: 1rem; background: var(--primary); color: white; border: none;
+            margin-top: 1rem; background: #4f46e5; color: white; border: none;
             padding: 1rem; border-radius: 12px; font-weight: 800; font-size: 1rem;
             display: flex; align-items: center; justify-content: center; gap: 0.75rem;
             cursor: pointer; transition: all 0.2s;
         }
-        .btn-auth-premium:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.4); }
+        .btn-auth-premium:hover { background: #4338ca; transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.4); }
         .btn-auth-premium:active { transform: translateY(0); }
 
         .form-footer { margin-top: 2rem; text-align: center; }
-        .form-footer p { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
-        .form-footer a { color: var(--primary); text-decoration: none; font-weight: 700; }
+        .form-footer p { font-size: 0.9rem; color: #64748b; font-weight: 500; }
+        .form-footer a { color: #4f46e5; text-decoration: none; font-weight: 700; }
       `}</style>
     </div>
   );
