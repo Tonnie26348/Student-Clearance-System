@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isConfigured } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { GraduationCap, ArrowRight, Mail, Lock, User, Hash } from 'lucide-react';
@@ -15,9 +15,15 @@ export default function SignUp() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    const { data: { user }, error: signUpError } = await supabase.auth.signUp({ 
+    if (!isConfigured) {
+        toast.error('System is not correctly configured. Please check your credentials.');
+        return;
+    }
+
+    setLoading(true);
+    // ...
+```
         email, 
         password,
         options: {

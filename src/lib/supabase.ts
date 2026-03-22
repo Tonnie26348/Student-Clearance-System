@@ -1,17 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const rawUrl = import.meta.env.VITE_SUPABASE_URL;
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Strict check
+// Trim whitespace which often causes fetch "Invalid value" errors
+const supabaseUrl = rawUrl?.trim();
+const supabaseAnonKey = rawKey?.trim();
+
+// Enhanced check
 export const isConfigured = Boolean(
     supabaseUrl && 
     supabaseAnonKey && 
     supabaseUrl.length > 10 && 
-    supabaseUrl.includes('supabase.co')
+    supabaseUrl.startsWith('http') &&
+    supabaseUrl.includes('.supabase.co')
 );
 
-console.log('Supabase check:', { isConfigured, urlExists: !!supabaseUrl });
+if (!isConfigured) {
+    console.warn('Supabase configuration is missing or invalid. Check your .env file.');
+    console.log('Configuration details:', { 
+        hasUrl: !!supabaseUrl, 
+        hasKey: !!supabaseAnonKey,
+        validUrlFormat: supabaseUrl?.startsWith('http')
+    });
+}
 
 export const supabase = createClient(
     isConfigured ? supabaseUrl : 'https://placeholder.supabase.co', 
