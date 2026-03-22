@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase, isConfigured } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { GraduationCap, ArrowRight, Mail, Lock, User, Hash } from 'lucide-react';
+import { GraduationCap, ArrowRight, Mail, Lock, User, Hash, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SignUp() {
@@ -10,6 +10,7 @@ export default function SignUp() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [regNumber, setRegNumber] = useState('');
+  const [role, setRole] = useState<'student' | 'staff' | 'admin'>('student');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -30,7 +31,8 @@ export default function SignUp() {
             options: {
                 data: {
                     full_name: fullName,
-                    reg_number: regNumber
+                    reg_number: regNumber,
+                    role: role
                 }
             }
         });
@@ -39,8 +41,6 @@ export default function SignUp() {
             toast.error(signUpError.message);
             setLoading(false);
         } else if (user) {
-            // Wait a moment for the trigger to fire, then update if necessary 
-            // (or let the trigger handle everything from raw_user_meta_data)
             toast.success('Account created! Please check your email for verification.');
             navigate('/login');
         }
@@ -62,7 +62,7 @@ export default function SignUp() {
                 Join the <br/>Clearance Revolution.
             </motion.h1>
             <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
-                Create your student account and track your graduation status in real-time.
+                Create your account and start your digital clearance process.
             </motion.p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function SignUp() {
         <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="form-container">
             <div className="form-header">
                 <h2>Create Account</h2>
-                <p>Register to start your clearance process</p>
+                <p>Register to start using the system</p>
             </div>
 
             <form onSubmit={handleSignUp} className="premium-form">
@@ -81,9 +81,24 @@ export default function SignUp() {
                 </div>
 
                 <div className="input-group-premium">
-                    <label><Hash size={16} /> Registration Number</label>
-                    <input type="text" value={regNumber} onChange={(e) => setRegNumber(e.target.value)} placeholder="CIT/123/2023" required />
+                    <label><ShieldCheck size={16} /> Account Type</label>
+                    <select 
+                        value={role} 
+                        onChange={(e) => setRole(e.target.value as any)}
+                        className="role-selector-premium"
+                    >
+                        <option value="student">Student</option>
+                        <option value="staff">Staff Member</option>
+                        <option value="admin">Administrator</option>
+                    </select>
                 </div>
+
+                {role === 'student' && (
+                    <div className="input-group-premium">
+                        <label><Hash size={16} /> Registration Number</label>
+                        <input type="text" value={regNumber} onChange={(e) => setRegNumber(e.target.value)} placeholder="CIT/123/2023" required />
+                    </div>
+                )}
 
                 <div className="input-group-premium">
                     <label><Mail size={16} /> Email Address</label>
@@ -132,6 +147,13 @@ export default function SignUp() {
         .input-group-premium label { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.85rem; color: #1e293b; }
         .input-group-premium input { padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; transition: all 0.2s; }
         .input-group-premium input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); outline: none; }
+
+        .role-selector-premium {
+            padding: 0.8rem 1rem; border-radius: 12px; border: 1.5px solid #e2e8f0;
+            font-size: 1rem; font-weight: 600; color: #1e293b; background: white;
+            cursor: pointer; transition: all 0.2s; outline: none;
+        }
+        .role-selector-premium:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
 
         .btn-auth-premium {
             margin-top: 1rem; background: #4f46e5; color: white; border: none;

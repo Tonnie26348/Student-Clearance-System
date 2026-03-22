@@ -112,7 +112,7 @@ BEGIN
     NEW.id, 
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''), 
     COALESCE(NEW.raw_user_meta_data->>'reg_number', ''), 
-    'student'
+    COALESCE(NEW.raw_user_meta_data->>'role', 'student')
   );
   RETURN NEW;
 END;
