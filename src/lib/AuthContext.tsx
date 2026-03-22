@@ -17,11 +17,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const initAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+            console.error('Auth Session Error:', error.message);
+        }
+        setSession(data?.session ?? null);
+        setUser(data?.session?.user ?? null);
+      } catch (err) {
+        console.error('Auth Initialization Failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
 
     const {
       data: { subscription },
