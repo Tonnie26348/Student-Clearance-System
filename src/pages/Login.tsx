@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { GraduationCap, ArrowRight, Mail, Lock, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -76,6 +76,7 @@ export default function Login() {
             </form>
 
             <div className="form-footer">
+                <p>New to the system? <Link to="/signup">Create Account</Link></p>
                 <p>Trouble signing in? <a href="#">Contact Support</a></p>
             </div>
         </motion.div>

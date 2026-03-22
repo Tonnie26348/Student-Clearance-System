@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './lib/AuthContext';
 import Login from './pages/Login';
+import SignUp from './pages/SignUp';
 import StudentDashboard from './pages/StudentDashboard';
 import StaffDashboard from './pages/StaffDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -28,6 +29,7 @@ function App() {
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/staff" element={<StaffDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />

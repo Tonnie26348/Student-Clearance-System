@@ -31,7 +31,25 @@ export default function StudentDashboard() {
   const [profile, setProfile] = useState({ full_name: '', reg_number: '' });
 
   useEffect(() => {
-    if (user) { fetchClearanceData(); fetchProfile(); }
+    if (user) { 
+      fetchClearanceData(); 
+      fetchProfile();
+      
+      // Real-time listening for clearance status updates
+      const channel = supabase.channel('clearance_status_updates')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'clearance_status'
+        }, () => {
+          fetchClearanceData();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user]);
 
   const fetchProfile = async () => {
@@ -41,11 +59,15 @@ export default function StudentDashboard() {
 
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile.full_name || !profile.reg_number) {
+        toast.error('Please fill in all profile details');
+        return;
+    }
     const promise = async () => {
         const { error } = await supabase.from('profiles').update(profile).eq('id', user?.id);
         if (error) throw error;
     };
-    toast.promise(promise(), { loading: 'Updating...', success: 'Saved!', error: 'Failed' });
+    toast.promise(promise(), { loading: 'Updating...', success: 'Profile Saved!', error: 'Failed to update' });
   }
 
   const fetchClearanceData = async () => {
@@ -61,44 +83,131 @@ export default function StudentDashboard() {
 
   const startClearance = async () => {
     if (!user) return;
+    if (!profile.full_name || !profile.reg_number) {
+        toast.error('Please complete your profile first (Name and Reg No)');
+        return;
+    }
+
     const promise = new Promise(async (resolve, reject) => {
-        const { data: req, error } = await supabase.from('clearance_requests').insert({ student_id: user.id }).select().single();
-        if (error) return reject(error);
-        const { data: depts } = await supabase.from('departments').select('id');
-        if (depts) {
-            await supabase.from('clearance_status').insert(depts.map(d => ({ request_id: req.id, department_id: d.id, status: 'pending' })));
+        // 1. Create the main request
+        const { data: req, error: reqErr } = await supabase.from('clearance_requests').insert({ student_id: user.id }).select().single();
+        if (reqErr) return reject(reqErr);
+
+        // 2. Get all available departments
+        const { data: depts, error: deptErr } = await supabase.from('departments').select('id');
+        if (deptErr) return reject(deptErr);
+
+        if (depts && depts.length > 0) {
+            // 3. Create status entries for each department
+            const { error: statusErr } = await supabase.from('clearance_status').insert(
+                depts.map(d => ({ 
+                    request_id: req.id, 
+                    department_id: d.id, 
+                    status: 'pending' 
+                }))
+            );
+            if (statusErr) return reject(statusErr);
+        } else {
+            return reject(new Error('No departments found in the system.'));
         }
+
         await fetchClearanceData();
         resolve(true);
     });
-    toast.promise(promise, { loading: 'Starting...', success: 'Started!', error: 'Error' });
+
+    toast.promise(promise, { 
+        loading: 'Initiating your clearance journey...', 
+        success: 'Clearance started successfully!', 
+        error: (err) => `Error: ${err.message || 'Could not start clearance'}` 
+    });
   };
 
   const handleFileUpload = async (statusId: string, file: File) => {
-    const filePath = `clearance-docs/${statusId}-${Date.now()}`;
+    const fileExt = file.name.split('.').pop();
+    const filePath = `clearance-docs/${user?.id}/${statusId}-${Date.now()}.${fileExt}`;
+    
     const promise = new Promise(async (resolve, reject) => {
         const { error: upErr } = await supabase.storage.from('documents').upload(filePath, file);
         if (upErr) return reject(upErr);
+        
         const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
-        await supabase.from('clearance_status').update({ attachment_url: publicUrl }).eq('id', statusId);
+        const { error: updateErr } = await supabase.from('clearance_status').update({ attachment_url: publicUrl }).eq('id', statusId);
+        
+        if (updateErr) return reject(updateErr);
+        
         await fetchClearanceData();
         resolve(true);
     });
-    toast.promise(promise, { loading: 'Uploading...', success: 'Uploaded!', error: 'Failed' });
+    
+    toast.promise(promise, { loading: 'Uploading proof...', success: 'Document uploaded!', error: 'Upload failed' });
   }
 
   const progress = statuses.length ? Math.round((statuses.filter(s => s.status === 'approved').length / statuses.length) * 100) : 0;
 
   const downloadCertificate = () => {
+    if (progress < 100) {
+        toast.error('Clearance is still in progress.');
+        return;
+    }
+
     const doc = new jsPDF();
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(79, 70, 229);
-    doc.text('UNIVERSITY CLEARANCE CERTIFICATE', 105, 40, { align: 'center' });
-    doc.setFontSize(12); doc.setTextColor(30, 41, 59);
-    doc.text(`Name: ${profile.full_name}`, 20, 70);
-    doc.text(`Reg No: ${profile.reg_number}`, 20, 80);
-    doc.text(`Certificate No: CLR-${requestId?.slice(0,8).toUpperCase()}`, 20, 90);
-    doc.text('Status: FULLY CLEARED', 20, 100);
-    doc.save('Clearance_Certificate.pdf');
+    const date = new Date().toLocaleDateString();
+    
+    // Header
+    doc.setFillColor(79, 70, 229);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.text('UNIVERSITY OF EXCELLENCE', 105, 25, { align: 'center' });
+    
+    // Title
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(18);
+    doc.text('OFFICIAL CLEARANCE CERTIFICATE', 105, 60, { align: 'center' });
+    
+    // Content
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('This is to certify that the student named below has fulfilled all departmental', 105, 80, { align: 'center' });
+    doc.text('obligations and is fully cleared for graduation.', 105, 87, { align: 'center' });
+    
+    // Details Box
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.5);
+    doc.rect(20, 100, 170, 60);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Student Name:', 30, 115);
+    doc.setFont('helvetica', 'normal');
+    doc.text(profile.full_name, 70, 115);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Reg Number:', 30, 130);
+    doc.setFont('helvetica', 'normal');
+    doc.text(profile.reg_number, 70, 130);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Certificate ID:', 30, 145);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`CLR-${requestId?.slice(0,8).toUpperCase()}-${new Date().getFullYear()}`, 70, 145);
+    
+    // Footer
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Generated on: ${date}`, 105, 200, { align: 'center' });
+    doc.text('Verified Digital Document', 105, 207, { align: 'center' });
+    
+    // Stamp-like element
+    doc.setDrawColor(22, 163, 74);
+    doc.setLineWidth(1);
+    doc.circle(160, 240, 20);
+    doc.setTextColor(22, 163, 74);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('APPROVED', 160, 242, { align: 'center' });
+    
+    doc.save(`Clearance_Certificate_${profile.reg_number.replace(/\//g, '_')}.pdf`);
   };
 
   return (
