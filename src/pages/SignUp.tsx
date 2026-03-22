@@ -22,38 +22,43 @@ export default function SignUp() {
     }
 
     setLoading(true);
-    // ...
-```
-        email, 
-        password,
-        options: {
-            data: {
-                full_name: fullName,
-                reg_number: regNumber
+
+    try {
+        const { data: { user }, error: signUpError } = await supabase.auth.signUp({ 
+            email, 
+            password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    reg_number: regNumber
+                }
             }
+        });
+
+        if (signUpError) {
+            toast.error(signUpError.message);
+            setLoading(false);
+        } else if (user) {
+            // Create/Update profile record
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({ 
+                    full_name: fullName, 
+                    reg_number: regNumber,
+                    role: 'student'
+                })
+                .eq('id', user.id);
+
+            if (profileError) {
+                console.error('Error updating profile:', profileError);
+            }
+
+            toast.success('Account created! Please check your email for verification.');
+            navigate('/login');
         }
-    });
-
-    if (signUpError) {
-      toast.error(signUpError.message);
-      setLoading(false);
-    } else if (user) {
-        // Create profile record (though Supabase trigger usually handles this, we do it explicitly if needed or it's part of the flow)
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ 
-                full_name: fullName, 
-                reg_number: regNumber,
-                role: 'student'
-            })
-            .eq('id', user.id);
-
-        if (profileError) {
-            console.error('Error updating profile:', profileError);
-        }
-
-        toast.success('Account created! Please check your email for verification.');
-        navigate('/login');
+    } catch (err: any) {
+        toast.error(err.message || 'An unexpected error occurred');
+        setLoading(false);
     }
   };
 
@@ -117,7 +122,7 @@ export default function SignUp() {
         @media (max-width: 900px) { .auth-visual { display: none; } }
 
         .auth-visual {
-            flex: 1.2; background: var(--primary); color: white; padding: 4rem;
+            flex: 1.2; background: #4f46e5; color: white; padding: 4rem;
             display: flex; flex-direction: column; justify-content: center; position: relative;
             background-image: radial-gradient(circle at top right, rgba(255,255,255,0.1), transparent);
         }
