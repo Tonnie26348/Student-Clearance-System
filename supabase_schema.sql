@@ -82,10 +82,22 @@ ON public.clearance_status FOR UPDATE
 USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND (role = 'admin' OR (role = 'staff' AND department_id = clearance_status.department_id))));
 
 
--- Insert default departments
-INSERT INTO public.departments (name, description) VALUES
-('Library', 'Clearance for books and library fines'),
-('Finance', 'Tuition and other fees'),
-('Sports', 'Sports equipment return'),
-('Faculty', 'Academic clearance'),
-('Alumni', 'Alumni registration');
+-- 5. Trigger to automatically create a profile for new users
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, reg_number, role)
+  VALUES (
+    NEW.id, 
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''), 
+    COALESCE(NEW.raw_user_meta_data->>'reg_number', ''), 
+    'student'
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

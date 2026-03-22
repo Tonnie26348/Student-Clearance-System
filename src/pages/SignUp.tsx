@@ -39,25 +39,14 @@ export default function SignUp() {
             toast.error(signUpError.message);
             setLoading(false);
         } else if (user) {
-            // Create/Update profile record
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .update({ 
-                    full_name: fullName, 
-                    reg_number: regNumber,
-                    role: 'student'
-                })
-                .eq('id', user.id);
-
-            if (profileError) {
-                console.error('Error updating profile:', profileError);
-            }
-
+            // Wait a moment for the trigger to fire, then update if necessary 
+            // (or let the trigger handle everything from raw_user_meta_data)
             toast.success('Account created! Please check your email for verification.');
             navigate('/login');
         }
     } catch (err: any) {
-        toast.error(err.message || 'An unexpected error occurred');
+        console.error('Sign up error:', err);
+        toast.error(err.message || 'An unexpected error occurred during sign up');
         setLoading(false);
     }
   };
