@@ -62,7 +62,7 @@ export default function Login() {
             <form onSubmit={handleLogin} className="premium-form">
                 <div className="input-group-premium">
                     <label><Mail size={16} /> Email Address</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@university.edu" required />
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@gmail.com" required />
                 </div>
 
                 <div className="input-group-premium">
