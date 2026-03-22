@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { supabase, isConfigured } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { GraduationCap, ArrowRight, Mail, Lock, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from 'src/components/ui/button';
+import { Input } from "src/components/ui/input"
+import { Label } from "src/components/ui/label"
+import { GraduationCap, Loader2 } from "lucide-react"
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -27,14 +29,15 @@ export default function Login() {
         if (error) {
             toast.error(error.message);
             setLoading(false);
-        } else {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-                if (profile?.role === 'staff') navigate('/staff');
-                else if (profile?.role === 'admin') navigate('/admin');
-                else navigate('/student');
-            }
+            return;
+        } 
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+            if (profile?.role === 'staff') navigate('/staff');
+            else if (profile?.role === 'admin') navigate('/admin');
+            else navigate('/student');
         }
     } catch (err: any) {
         toast.error(err.message || 'An unexpected error occurred');
@@ -43,96 +46,131 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-visual">
-        <div className="visual-content">
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="visual-logo">
-                <GraduationCap size={48} />
-            </motion.div>
-            <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-                Seamless Graduation <br/>Clearance.
-            </motion.h1>
-            <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
-                Experience the future of university administration. <br/>Efficient, transparent, and completely digital.
-            </motion.p>
-        </div>
-        <div className="visual-footer">
-            <div className="trusted-badge">
-                <ShieldCheck size={16} /> <span>Official University System</span>
+    <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
+      <div className="flex items-center justify-center py-12 px-6">
+        <div className="mx-auto grid w-full max-w-[400px] gap-8">
+          <div className="flex flex-col gap-2 text-center">
+             <div className="flex items-center justify-center gap-2 text-primary font-bold text-2xl mb-4">
+                <GraduationCap className="w-8 h-8" />
+                <span>ClearanceHub</span>
+             </div>
+            <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+            <p className="text-muted-foreground text-sm">
+              Enter your email below to login to your account
+            </p>
+          </div>
+          
+          <form onSubmit={handleLogin} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-11"
+              />
             </div>
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  to="/forgot-password"
+                  className="ml-auto inline-block text-sm text-primary hover:underline font-medium"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+              <Input 
+                id="password" 
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
+                className="h-11"
+              />
+            </div>
+            <Button type="submit" className="w-full h-11 text-base font-medium" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading ? 'Logging in...' : 'Login'}
+            </Button>
+            
+             <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <Button variant="outline" className="w-full h-11" type="button">
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Google
+            </Button>
+          </form>
+          
+          <div className="mt-4 text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link to="/signup" className="text-primary hover:underline font-medium">
+              Sign up
+            </Link>
+          </div>
         </div>
       </div>
-
-      <div className="auth-form-side">
-        <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="form-container">
-            <div className="form-header">
-                <h2>Welcome Back</h2>
-                <p>Sign in to manage your clearance</p>
-            </div>
-
-            <form onSubmit={handleLogin} className="premium-form">
-                <div className="input-group-premium">
-                    <label><Mail size={16} /> Email Address</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@gmail.com" required />
-                </div>
-
-                <div className="input-group-premium">
-                    <label><Lock size={16} /> Password</label>
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
-                </div>
-
-                <button type="submit" disabled={loading} className="btn-auth-premium">
-                    {loading ? 'Authenticating...' : 'Sign In'} <ArrowRight size={18} />
-                </button>
-            </form>
-
-            <div className="form-footer">
-                <p>New to the system? <Link to="/signup">Create Account</Link></p>
-                <p>Trouble signing in? <a href="#">Contact Support</a></p>
-            </div>
-        </motion.div>
-      </div>
-
-      <style>{`
-        .auth-wrapper { display: flex; min-height: 100vh; background: white; }
-        @media (max-width: 900px) { .auth-visual { display: none; } }
-
-        .auth-visual {
-            flex: 1.2; background: #4f46e5; color: white; padding: 4rem;
-            display: flex; flex-direction: column; justify-content: center; position: relative;
-            background-image: radial-gradient(circle at top right, rgba(255,255,255,0.1), transparent);
-        }
-        .visual-logo { width: 80px; height: 80px; background: rgba(255,255,255,0.15); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
-        .visual-content h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; color: white; letter-spacing: -0.02em; }
-        .visual-content p { font-size: 1.25rem; color: rgba(255,255,255,0.8); font-weight: 500; }
-        .visual-footer { position: absolute; bottom: 3rem; left: 4rem; }
-        .trusted-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 99px; font-weight: 700; font-size: 0.85rem; }
-
-        .auth-form-side { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; background: #f8fafc; }
-        .form-container { width: 100%; max-width: 420px; background: white; padding: 3rem; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+      
+      {/* Decorative Side */}
+      <div className="hidden bg-primary lg:flex flex-col items-center justify-center p-12 text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-blue-900/90"></div>
         
-        .form-header h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
-        .form-header p { color: #64748b; margin-bottom: 2.5rem; font-weight: 500; }
-
-        .premium-form { display: flex; flex-direction: column; gap: 1.5rem; }
-        .input-group-premium { display: flex; flex-direction: column; gap: 0.5rem; }
-        .input-group-premium label { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.85rem; color: #1e293b; }
-        .input-group-premium input { padding: 0.85rem 1rem; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; transition: all 0.2s; }
-        .input-group-premium input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); outline: none; }
-
-        .btn-auth-premium {
-            margin-top: 1rem; background: #4f46e5; color: white; border: none;
-            padding: 1rem; border-radius: 12px; font-weight: 800; font-size: 1rem;
-            display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .btn-auth-premium:hover { background: #4338ca; transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.4); }
-        .btn-auth-premium:active { transform: translateY(0); }
-
-        .form-footer { margin-top: 2rem; text-align: center; }
-        .form-footer p { font-size: 0.9rem; color: #64748b; font-weight: 500; }
-        .form-footer a { color: #4f46e5; text-decoration: none; font-weight: 700; }
-      `}</style>
+        <div className="relative z-10 max-w-[500px] text-center space-y-6">
+            <div className="h-20 w-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl border border-white/10">
+                <GraduationCap className="h-10 w-10 text-white" />
+            </div>
+            <h2 className="text-4xl font-bold tracking-tight">Streamline Your Clearance Process</h2>
+            <p className="text-lg text-primary-foreground/80 leading-relaxed">
+                Experience a modern, efficient way to manage student clearance. No more long queues and paperwork.
+            </p>
+            
+             <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/20 mt-8">
+                <div>
+                    <h3 className="text-2xl font-bold">100%</h3>
+                    <p className="text-xs text-primary-foreground/60 uppercase tracking-wider mt-1">Digital</p>
+                </div>
+                 <div>
+                    <h3 className="text-2xl font-bold">24/7</h3>
+                    <p className="text-xs text-primary-foreground/60 uppercase tracking-wider mt-1">Access</p>
+                </div>
+                 <div>
+                    <h3 className="text-2xl font-bold">Fast</h3>
+                    <p className="text-xs text-primary-foreground/60 uppercase tracking-wider mt-1">Processing</p>
+                </div>
+             </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,26 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import Navbar from '../components/Navbar';
-import { Users, Building2, Download, Plus, Trash2, PieChart, ShieldCheck } from 'lucide-react';
+import { DashboardLayout } from '../components/DashboardLayout';
+import { Users, Building2, Download, Plus, Trash2, PieChart, ShieldCheck, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from "src/components/ui/button"
+import { Input } from "src/components/ui/input"
+import { Label } from "src/components/ui/label"
+import { Badge } from "src/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "src/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "src/components/ui/select"
 
 interface UserProfile {
   id: string;
@@ -22,7 +40,7 @@ interface Department {
 export default function AdminDashboard() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [activeTab, setActiveTab] = useState<'users' | 'depts' | 'stats'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'depts'>('stats');
   const [newDeptName, setNewDeptName] = useState('');
   const [newDeptDesc, setNewDeptDesc] = useState('');
   const [userSearch, setUserSearch] = useState('');
@@ -118,250 +136,266 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="admin-container">
-      <Navbar />
-      <main className="content">
-        <header className="page-header">
-          <div>
-            <h1>Administrative Console</h1>
-            <p className="subtitle">Global university oversight and configuration</p>
-          </div>
-          <div className="header-actions-group">
-            <button onClick={exportToCSV} className="btn-export">
-                <Download size={18} />
-                <span>Export Report</span>
-            </button>
-          </div>
-        </header>
+    <DashboardLayout>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Administrative Console</h1>
+                <p className="text-muted-foreground">Global university oversight and configuration.</p>
+            </div>
+            <Button variant="outline" onClick={exportToCSV} className="gap-2">
+                <Download className="h-4 w-4" /> Export Report
+            </Button>
+        </div>
 
-        <div className="admin-tabs">
-            <button className={activeTab === 'stats' ? 'active' : ''} onClick={() => setActiveTab('stats')}>
-                <PieChart size={18} /> Overview
-            </button>
-            <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
-                <Users size={18} /> User Access
-            </button>
-            <button className={activeTab === 'depts' ? 'active' : ''} onClick={() => setActiveTab('depts')}>
-                <Building2 size={18} /> Departments
-            </button>
+        {/* Custom Tabs */}
+        <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
+            <Button 
+                variant={activeTab === 'stats' ? 'default' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveTab('stats')}
+                className="gap-2"
+            >
+                <PieChart className="h-4 w-4" /> Overview
+            </Button>
+            <Button 
+                variant={activeTab === 'users' ? 'default' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveTab('users')}
+                className="gap-2"
+            >
+                <Users className="h-4 w-4" /> User Management
+            </Button>
+            <Button 
+                variant={activeTab === 'depts' ? 'default' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveTab('depts')}
+                className="gap-2"
+            >
+                <Building2 className="h-4 w-4" /> Departments
+            </Button>
         </div>
 
         {activeTab === 'stats' && (
-            <div className="stats-section animate-fade-in">
-                <div className="stats-grid">
-                    <div className="stat-card">
-                        <div className="stat-icon blue"><Users /></div>
-                        <div><h3>{stats.totalStudents}</h3><p>Active Students</p></div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon purple"><ShieldCheck /></div>
-                        <div><h3>{stats.totalStaff}</h3><p>Authorized Staff</p></div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon green"><Building2 /></div>
-                        <div><h3>{stats.totalDepts}</h3><p>Clearance Points</p></div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon orange"><ShieldCheck /></div>
-                        <div><h3>{stats.admins}</h3><p>System Admins</p></div>
-                    </div>
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+                            <p className="text-xs text-muted-foreground">Active in system</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Authorized Staff</CardTitle>
+                            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.totalStaff}</div>
+                            <p className="text-xs text-muted-foreground">Department leads</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Departments</CardTitle>
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.totalDepts}</div>
+                            <p className="text-xs text-muted-foreground">Clearance points</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Admins</CardTitle>
+                            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.admins}</div>
+                            <p className="text-xs text-muted-foreground">System operators</p>
+                        </CardContent>
+                    </Card>
                 </div>
                 
-                <div className="info-box-premium">
-                    <div className="info-header">
-                        <ShieldCheck size={24} />
-                        <h3>System Security & Health</h3>
-                    </div>
-                    <p>The clearance system is running on Supabase with Row Level Security enabled. All departmental nodes are reporting active status. Real-time event bus is operational.</p>
-                </div>
+                <Card className="bg-primary/5 border-primary/20">
+                    <CardHeader>
+                         <div className="flex items-center gap-2 text-primary">
+                            <ShieldCheck className="h-5 w-5" />
+                            <CardTitle>System Health</CardTitle>
+                         </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                            The clearance system is running on Supabase with Row Level Security enabled. All departmental nodes are reporting active status. Real-time event bus is operational.
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
         )}
 
         {activeTab === 'users' && (
-            <section className="management-section animate-fade-in">
-                <div className="search-bar-admin">
-                    <input 
-                        type="text" 
-                        placeholder="Search users by name, email or reg no..." 
-                        value={userSearch}
-                        onChange={(e) => setUserSearch(e.target.value)}
-                    />
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-2 w-full md:w-1/2">
+                    <div className="relative w-full">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            placeholder="Search users..." 
+                            className="pl-9"
+                            value={userSearch}
+                            onChange={(e) => setUserSearch(e.target.value)}
+                        />
+                    </div>
                 </div>
-                <div className="table-container-admin">
-                    <table className="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Identity</th>
-                                <th>Role</th>
-                                <th>Department Assignment</th>
-                                <th>Access Level</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredUsers.map((u) => (
-                                <tr key={u.id}>
-                                    <td>
-                                        <div className="user-info">
-                                            <strong>{u.full_name || 'No Name'}</strong>
-                                            <span className="user-sub">{u.email}</span>
-                                            {u.reg_number && <span className="user-reg-tag">{u.reg_number}</span>}
-                                        </div>
-                                    </td>
-                                    <td><span className={`role-badge badge-${u.role}`}>{u.role}</span></td>
-                                    <td>
-                                        {u.role === 'staff' ? (
-                                            <select 
-                                                className="admin-select"
-                                                value={u.department_id || ''} 
-                                                onChange={(e) => updateRole(u.id, u.role, e.target.value)}
-                                            >
-                                                <option value="">No Department</option>
-                                                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                                            </select>
-                                        ) : <span className="text-muted">N/A</span>}
-                                    </td>
-                                    <td>
-                                        <select 
-                                            className="admin-select access-select"
-                                            value={u.role} 
-                                            onChange={(e) => updateRole(u.id, e.target.value, u.department_id)}
-                                        >
-                                            <option value="student">Student</option>
-                                            <option value="staff">Staff</option>
-                                            <option value="admin">Admin</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+
+                <Card>
+                    <CardContent className="p-0">
+                         <div className="rounded-md border">
+                            <div className="w-full overflow-auto">
+                                <table className="w-full caption-bottom text-sm">
+                                    <thead className="[&_tr]:border-b">
+                                        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Identity</th>
+                                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Role</th>
+                                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Department</th>
+                                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Access Level</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="[&_tr:last-child]:border-0">
+                                        {filteredUsers.map((u) => (
+                                            <tr key={u.id} className="border-b transition-colors hover:bg-muted/50">
+                                                <td className="p-4 align-middle">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium">{u.full_name || 'No Name'}</span>
+                                                        <span className="text-xs text-muted-foreground">{u.email}</span>
+                                                        {u.reg_number && <Badge variant="outline" className="w-fit mt-1 text-[10px]">{u.reg_number}</Badge>}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 align-middle">
+                                                    <Badge variant={u.role === 'admin' ? 'default' : u.role === 'staff' ? 'secondary' : 'outline'}>
+                                                        {u.role}
+                                                    </Badge>
+                                                </td>
+                                                <td className="p-4 align-middle">
+                                                    {u.role === 'staff' ? (
+                                                        <Select 
+                                                            value={u.department_id || "none"} 
+                                                            onValueChange={(val) => updateRole(u.id, u.role, val === "none" ? null : val)}
+                                                        >
+                                                            <SelectTrigger className="w-[180px] h-8">
+                                                                <SelectValue placeholder="Select Dept" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="none">No Department</SelectItem>
+                                                                {departments.map(d => (
+                                                                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-sm">-</span>
+                                                    )}
+                                                </td>
+                                                <td className="p-4 align-middle">
+                                                     <Select 
+                                                        value={u.role} 
+                                                        onValueChange={(val) => updateRole(u.id, val, u.department_id)}
+                                                    >
+                                                        <SelectTrigger className="w-[140px] h-8">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="student">Student</SelectItem>
+                                                            <SelectItem value="staff">Staff</SelectItem>
+                                                            <SelectItem value="admin">Admin</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         )}
 
         {activeTab === 'depts' && (
-            <section className="management-section animate-fade-in">
-                <div className="glass-card-admin p-6 mb-8">
-                    <h3 className="mb-4 font-bold">Register New Department</h3>
-                    <form onSubmit={addDepartment} className="add-dept-form-premium">
-                        <div className="form-row">
-                            <input 
-                                type="text" 
-                                placeholder="Department Name" 
-                                value={newDeptName}
-                                onChange={(e) => setNewDeptName(e.target.value)}
-                                required
-                            />
-                            <input 
-                                type="text" 
-                                placeholder="Brief Description" 
-                                value={newDeptDesc}
-                                onChange={(e) => setNewDeptDesc(e.target.value)}
-                            />
-                            <button type="submit" className="btn-add-premium"><Plus size={18} /> Add Point</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div className="dept-grid-premium">
-                    {departments.map(d => (
-                        <div key={d.id} className="dept-card-premium">
-                            <div className="dept-main">
-                                <div className="dept-icon"><Building2 size={24} /></div>
-                                <div className="dept-details">
-                                    <h3>{d.name}</h3>
-                                    <p>{d.description || 'Standard university clearance point'}</p>
-                                </div>
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Add New Department</CardTitle>
+                        <CardDescription>Create a new clearance checkpoint for students.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={addDepartment} className="flex flex-col md:flex-row gap-4">
+                            <div className="grid w-full gap-2">
+                                <Label htmlFor="dept-name">Department Name</Label>
+                                <Input 
+                                    id="dept-name" 
+                                    placeholder="e.g. Library, Sports, Finance" 
+                                    value={newDeptName}
+                                    onChange={(e) => setNewDeptName(e.target.value)}
+                                    required
+                                />
                             </div>
-                            <button onClick={() => deleteDepartment(d.id)} className="btn-delete-dept" title="Remove Department">
-                                <Trash2 size={18} />
-                            </button>
-                        </div>
+                            <div className="grid w-full gap-2">
+                                <Label htmlFor="dept-desc">Description</Label>
+                                <Input 
+                                    id="dept-desc" 
+                                    placeholder="Brief description of requirements" 
+                                    value={newDeptDesc}
+                                    onChange={(e) => setNewDeptDesc(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex items-end">
+                                <Button type="submit" className="w-full md:w-auto gap-2">
+                                    <Plus className="h-4 w-4" /> Add Department
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {departments.map(d => (
+                        <Card key={d.id} className="group relative hover:border-primary/50 transition-colors">
+                            <CardHeader>
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                            <Building2 className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <CardTitle className="text-base">{d.name}</CardTitle>
+                                        </div>
+                                    </div>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => deleteDepartment(d.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {d.description || 'Standard university clearance point.'}
+                                </p>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
-            </section>
+            </div>
         )}
-      </main>
-
-      <style>{`
-        .admin-container { min-height: 100vh; background: #f8fafc; }
-        .content { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-        
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; }
-        h1 { margin: 0; color: #1e293b; font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em; }
-        .subtitle { color: #64748b; font-weight: 500; margin-top: 0.25rem; }
-
-        .btn-export {
-            display: flex; align-items: center; gap: 0.5rem; background: white; color: #1e293b;
-            border: 1.5px solid #e2e8f0; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 700;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .btn-export:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
-
-        .admin-tabs { display: flex; gap: 0.5rem; margin-bottom: 2.5rem; background: #f1f5f9; padding: 0.5rem; border-radius: 14px; width: fit-content; }
-        .admin-tabs button {
-            border: none; background: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700;
-            color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; transition: all 0.2s;
-        }
-        .admin-tabs button.active { background: white; color: #4f46e5; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: white; padding: 2rem; border-radius: 20px; display: flex; align-items: center; gap: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
-        .stat-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; }
-        .stat-icon.blue { background: #4f46e5; }
-        .stat-icon.purple { background: #8b5cf6; }
-        .stat-icon.green { background: #10b981; }
-        .stat-icon.orange { background: #f59e0b; }
-        .stat-card h3 { margin: 0; font-size: 2rem; font-weight: 900; color: #1e293b; }
-        .stat-card p { margin: 0; color: #64748b; font-weight: 600; font-size: 0.95rem; }
-
-        .info-box-premium { background: #eef2ff; border: 1px solid #c7d2fe; padding: 2rem; border-radius: 20px; color: #3730a3; }
-        .info-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: #4338ca; }
-        .info-header h3 { margin: 0; font-size: 1.25rem; font-weight: 800; }
-        .info-box-premium p { margin: 0; line-height: 1.6; font-weight: 500; opacity: 0.9; }
-
-        .search-bar-admin { margin-bottom: 1.5rem; }
-        .search-bar-admin input { width: 100%; padding: 1rem 1.5rem; border-radius: 14px; border: 1.5px solid #e2e8f0; font-size: 1rem; background: white; outline: none; transition: all 0.2s; }
-        .search-bar-admin input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-
-        .table-container-admin { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .admin-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .admin-table th { background: #f8fafc; padding: 1.25rem 1.5rem; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; }
-        .admin-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
-        
-        .user-info { display: flex; flex-direction: column; gap: 0.25rem; }
-        .user-sub { font-size: 0.85rem; color: #64748b; }
-        .user-reg-tag { font-size: 0.7rem; font-weight: 800; background: #f1f5f9; color: #475569; padding: 0.2rem 0.5rem; border-radius: 4px; width: fit-content; margin-top: 0.25rem; }
-        
-        .role-badge { padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-        .badge-student { background: #dcfce7; color: #166534; }
-        .badge-staff { background: #e0e7ff; color: #3730a3; }
-        .badge-admin { background: #fef3c7; color: #92400e; }
-
-        .admin-select { padding: 0.5rem 0.75rem; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 0.85rem; font-weight: 600; color: #1e293b; outline: none; cursor: pointer; }
-        .access-select { background: #4f46e5; color: white; border-color: #4f46e5; }
-
-        .add-dept-form-premium .form-row { display: flex; gap: 1rem; }
-        .add-dept-form-premium input { flex: 1; padding: 0.85rem 1.25rem; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 1rem; }
-        .btn-add-premium { background: #4f46e5; color: white; border: none; padding: 0 1.5rem; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
-        .btn-add-premium:hover { background: #4338ca; transform: translateY(-1px); }
-
-        .dept-grid-premium { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem; }
-        .dept-card-premium { background: white; padding: 1.75rem; border-radius: 20px; border: 1.5px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; }
-        .dept-card-premium:hover { transform: translateY(-4px); border-color: #4f46e5; box-shadow: 0 12px 20px -8px rgba(79, 70, 229, 0.15); }
-        .dept-main { display: flex; gap: 1.25rem; align-items: flex-start; }
-        .dept-icon { width: 48px; height: 48px; background: #f5f3ff; color: #4f46e5; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-        .dept-details h3 { margin: 0; font-size: 1.15rem; font-weight: 800; color: #1e293b; }
-        .dept-details p { margin: 0.4rem 0 0; font-size: 0.9rem; color: #64748b; line-height: 1.4; }
-        .btn-delete-dept { background: #fee2e2; border: none; color: #ef4444; cursor: pointer; padding: 0.75rem; border-radius: 12px; transition: all 0.2s; opacity: 0; }
-        .dept-card-premium:hover .btn-delete-dept { opacity: 1; }
-        .btn-delete-dept:hover { background: #fecaca; transform: scale(1.1); }
-
-        .glass-card-admin { background: white; border-radius: 20px; border: 1px solid #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
-
