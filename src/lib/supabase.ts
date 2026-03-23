@@ -1,34 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Aggressively strip any character that isn't valid in a URL or Key (handles hidden Vercel/IDE characters)
-const scrub = (val: string | undefined) => (val || '').replace(/[^\x21-\x7E]/g, '').trim();
+// Hardcoded credentials to ensure immediate functionality
+const supabaseUrl = 'https://ifqbbardxxowrxkaqbge.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmcWJiYXJkeHhvd3J4a2FxYmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDM1OTIsImV4cCI6MjA4OTY3OTU5Mn0.0lQBXQ8vR4LPL76zfIkLsjtDvRXJaqN_iTkUrpKdF5s';
 
-const supabaseUrl = scrub(import.meta.env.VITE_SUPABASE_URL);
-const supabaseAnonKey = scrub(import.meta.env.VITE_SUPABASE_ANON_KEY);
+export const isConfigured = true;
 
-export const isConfigured = Boolean(
-    supabaseUrl && 
-    supabaseAnonKey && 
-    supabaseUrl.startsWith('http') &&
-    supabaseUrl.length > 20
-);
-
-if (!isConfigured) {
-    console.warn('⚠️ Supabase Configuration Error:', {
-        urlValid: supabaseUrl.startsWith('http'),
-        urlLen: supabaseUrl.length,
-        keyLen: supabaseAnonKey.length
-    });
-}
-
-// Ensure createClient never receives an empty string for URL to avoid 'fetch' Invalid Value errors
-export const supabase = createClient(
-    supabaseUrl.startsWith('http') ? supabaseUrl : 'https://placeholder.supabase.co', 
-    supabaseAnonKey || 'placeholder-key',
-    {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true
-        }
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
     }
-);
+});
+
+console.log('🚀 Supabase initialized with hardcoded credentials.');
