@@ -36,10 +36,12 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { profile } = useProfile();
-  const { signOut, user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+  const { signOut, user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isGlobalLoading = authLoading || profileLoading;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -66,6 +68,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr]">
+      {isGlobalLoading && (
+        <div className="fixed top-0 left-0 right-0 h-1 bg-primary/20 z-[100]">
+          <div className="h-full bg-primary animate-[loading_2s_infinite]" style={{ width: '30%' }}></div>
+        </div>
+      )}
+      <style>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(400%); }
+        }
+      `}</style>
       {/* Desktop Sidebar */}
       <div className="hidden border-r bg-background md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">

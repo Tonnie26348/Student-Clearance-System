@@ -46,12 +46,21 @@ export default function StudentDashboard() {
     const loadData = async () => {
         try {
             setLoading(true);
-            await Promise.all([
+            console.log('Fetching dashboard data for user:', user?.id);
+            const results = await Promise.allSettled([
                 fetchProfile(),
                 fetchClearanceData()
             ]);
+            
+            results.forEach((res, i) => {
+              if (res.status === 'rejected') {
+                console.error(`Promise ${i} failed:`, res.reason);
+                toast.error(`Failed to load ${i === 0 ? 'profile' : 'clearance data'}`);
+              }
+            });
         } catch (err) {
             console.error('Dashboard load failed:', err);
+            toast.error('An unexpected error occurred while loading your dashboard');
         } finally {
             setLoading(false);
         }
@@ -105,26 +114,41 @@ export default function StudentDashboard() {
 
   const fetchClearanceData = async () => {
     try {
+      console.log('Fetching clearance request for student:', user?.id);
       const { data: request, error: reqError } = await supabase
         .from('clearance_requests')
         .select('id')
         .eq('student_id', user?.id)
         .maybeSingle();
 
-      if (reqError) throw reqError;
+      if (reqError) {
+        console.error('Request fetch error:', reqError);
+        throw reqError;
+      }
 
       if (request) {
+        console.log('Active request found:', request.id);
         setRequestId(request.id);
         const { data, error: statusError } = await supabase
           .from('clearance_status')
           .select(`id, status, comments, attachment_url, department:departments(name)`)
           .eq('request_id', request.id);
 
-        if (statusError) throw statusError;
+        if (statusError) {
+          console.error('Status fetch error:', statusError);
+          throw statusError;
+        }
+        
+        console.log('Clearance statuses found:', data?.length || 0);
         if (data) setStatuses(data as any);
+      } else {
+        console.log('No active clearance request found.');
+        setStatuses([]);
+        setRequestId(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching clearance data:', error);
+      toast.error('Could not fetch clearance status');
     }
   };
 
