@@ -35,33 +35,40 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && !user) navigate('/login');
-  }, [user, authLoading, navigate]);
+    if (authLoading) return;
 
-  useEffect(() => {
-    if (user) {
-      // ...
-
-      fetchClearanceData(); 
-      fetchProfile();
-      
-      const channel = supabase.channel('clearance_status_updates')
-        .on('postgres_changes', { 
-          event: '*', 
-          schema: 'public', 
-          table: 'clearance_status'
-        }, () => {
-          fetchClearanceData();
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } else {
+    if (!user) {
       setLoading(false);
+      navigate('/login');
+      return;
     }
-  }, [user]);
+
+    const loadData = async () => {
+        try {
+            await Promise.all([fetchClearanceData(), fetchProfile()]);
+        } catch (err) {
+            console.error('Dashboard load failed:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    loadData();
+    
+    const channel = supabase.channel('clearance_status_updates')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'clearance_status'
+      }, () => {
+        fetchClearanceData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, authLoading, navigate]);
 
   const fetchProfile = async () => {
     try {

@@ -1,29 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
-const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+// Aggressively strip any character that isn't valid in a URL or Key (handles hidden Vercel/IDE characters)
+const scrub = (val: string | undefined) => (val || '').replace(/[^\x21-\x7E]/g, '').trim();
+
+const supabaseUrl = scrub(import.meta.env.VITE_SUPABASE_URL);
+const supabaseAnonKey = scrub(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 export const isConfigured = Boolean(
     supabaseUrl && 
     supabaseAnonKey && 
-    supabaseUrl.startsWith('http')
+    supabaseUrl.startsWith('http') &&
+    supabaseUrl.length > 20
 );
 
-// Detailed logging for debugging (safe - doesn't leak keys)
 if (!isConfigured) {
-    console.warn('⚠️ Supabase Config Diagnostic:', {
-        urlType: typeof import.meta.env.VITE_SUPABASE_URL,
-        keyType: typeof import.meta.env.VITE_SUPABASE_ANON_KEY,
-        urlLength: supabaseUrl.length,
-        keyLength: supabaseAnonKey.length,
-        urlPrefix: supabaseUrl.substring(0, 5),
-        allEnvKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_'))
+    console.warn('⚠️ Supabase Configuration Error:', {
+        urlValid: supabaseUrl.startsWith('http'),
+        urlLen: supabaseUrl.length,
+        keyLen: supabaseAnonKey.length
     });
-} else {
-    console.log('🚀 Supabase initialized successfully.');
 }
 
+// Ensure createClient never receives an empty string for URL to avoid 'fetch' Invalid Value errors
 export const supabase = createClient(
-    isConfigured ? supabaseUrl : 'https://placeholder.supabase.co', 
-    isConfigured ? supabaseAnonKey : 'placeholder-key'
+    supabaseUrl.startsWith('http') ? supabaseUrl : 'https://placeholder.supabase.co', 
+    supabaseAnonKey || 'placeholder-key',
+    {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true
+        }
+    }
 );
