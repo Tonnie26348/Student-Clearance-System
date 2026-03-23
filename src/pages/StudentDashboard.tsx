@@ -45,7 +45,11 @@ export default function StudentDashboard() {
 
     const loadData = async () => {
         try {
-            await Promise.all([fetchClearanceData(), fetchProfile()]);
+            setLoading(true);
+            await Promise.all([
+                fetchProfile(),
+                fetchClearanceData()
+            ]);
         } catch (err) {
             console.error('Dashboard load failed:', err);
         } finally {
@@ -61,6 +65,7 @@ export default function StudentDashboard() {
         schema: 'public', 
         table: 'clearance_status'
       }, () => {
+        // Silently update data without showing skeleton
         fetchClearanceData();
       })
       .subscribe();
@@ -100,7 +105,6 @@ export default function StudentDashboard() {
 
   const fetchClearanceData = async () => {
     try {
-      setLoading(true);
       const { data: request, error: reqError } = await supabase
         .from('clearance_requests')
         .select('id')
@@ -121,9 +125,6 @@ export default function StudentDashboard() {
       }
     } catch (error) {
       console.error('Error fetching clearance data:', error);
-      toast.error('Failed to load clearance status');
-    } finally {
-      setLoading(false);
     }
   };
 

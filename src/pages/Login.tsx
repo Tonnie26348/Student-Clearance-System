@@ -46,9 +46,12 @@ export default function Login() {
   };
 
   return (
-    <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12 px-6">
-        <div className="mx-auto grid w-full max-w-[400px] gap-8">
+    <div className="w-full min-h-screen lg:grid lg:grid-cols-2 bg-muted/30">
+      <div className="flex items-center justify-center py-12 px-6 relative">
+        {/* Mobile background flourish */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent lg:hidden pointer-events-none" />
+        
+        <div className="mx-auto grid w-full max-w-[400px] gap-8 relative z-10 bg-background p-8 rounded-2xl shadow-xl border border-border/50 lg:shadow-none lg:border-none lg:p-0">
           <div className="flex flex-col gap-2 text-center">
              <div className="flex items-center justify-center gap-2 text-primary font-bold text-2xl mb-4">
                 <GraduationCap className="w-8 h-8" />

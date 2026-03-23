@@ -40,16 +40,31 @@ export default function StaffDashboard() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!profileLoading && (!profile || profile.role !== 'staff')) {
+    if (profileLoading) return;
+
+    if (!profile || profile.role !== 'staff') {
         if (profile?.role === 'student') navigate('/student');
         else if (profile?.role === 'admin') navigate('/admin');
-        else if (!profile) navigate('/login');
+        else navigate('/login');
+        setLoading(false);
+        return;
     }
-  }, [profile, profileLoading, navigate]);
 
-  useEffect(() => {
-    if (profile?.department_id) {
-        fetchPendingRequests();
+    const loadStaffData = async () => {
+        try {
+            setLoading(true);
+            await fetchPendingRequests();
+            const { data: deptData } = await supabase.from('departments').select('name').eq('id', profile.department_id).single();
+            if (deptData) setDeptName(deptData.name);
+        } catch (err) {
+            console.error('Staff dashboard load failed:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (profile.department_id) {
+        loadStaffData();
         
         const channel = supabase.channel(`dept_${profile.department_id}_updates`)
             .on('postgres_changes', { 
@@ -65,21 +80,13 @@ export default function StaffDashboard() {
         return () => {
             supabase.removeChannel(channel);
         };
-    } else if (!profileLoading) {
+    } else {
         setLoading(false);
     }
-  }, [profile, profileLoading]);
-
-  useEffect(() => {
-      if (profile?.department_id) {
-          supabase.from('departments').select('name').eq('id', profile.department_id).single()
-              .then(({ data }) => { if (data) setDeptName(data.name); });
-      }
-  }, [profile?.department_id]);
+  }, [profile, profileLoading, navigate]);
 
   const fetchPendingRequests = async () => {
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('clearance_status')
         .select(`
