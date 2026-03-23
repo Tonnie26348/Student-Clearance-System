@@ -9,6 +9,9 @@ import Profile from './pages/Profile';
 import Requests from './pages/Requests';
 import Settings from './pages/Settings';
 import Landing from './pages/Landing';
+import Features from './pages/Features';
+import HowItWorks from './pages/HowItWorks';
+import FAQ from './pages/FAQ';
 import { Toaster } from 'sonner';
 import { AnimatePresence } from 'framer-motion';
 import { isConfigured } from './lib/supabase';
@@ -33,6 +36,9 @@ function App() {
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/student" element={<StudentDashboard />} />
