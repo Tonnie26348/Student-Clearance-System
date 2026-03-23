@@ -12,10 +12,12 @@ export const isConfigured = Boolean(
 // Detailed logging for debugging (safe - doesn't leak keys)
 if (!isConfigured) {
     console.warn('⚠️ Supabase Config Diagnostic:', {
-        hasUrl: !!supabaseUrl,
-        hasKey: !!supabaseAnonKey,
-        urlValid: supabaseUrl.startsWith('http'),
-        urlValue: supabaseUrl ? supabaseUrl.substring(0, 10) + '...' : 'none'
+        urlType: typeof import.meta.env.VITE_SUPABASE_URL,
+        keyType: typeof import.meta.env.VITE_SUPABASE_ANON_KEY,
+        urlLength: supabaseUrl.length,
+        keyLength: supabaseAnonKey.length,
+        urlPrefix: supabaseUrl.substring(0, 5),
+        allEnvKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_'))
     });
 } else {
     console.log('🚀 Supabase initialized successfully.');
