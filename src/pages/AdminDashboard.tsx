@@ -22,6 +22,9 @@ import {
   SelectValue,
 } from "src/components/ui/select"
 
+import { useNavigate } from 'react-router-dom';
+import { useProfile } from '../lib/useProfile';
+
 interface UserProfile {
   id: string;
   full_name: string | null;
@@ -38,23 +41,45 @@ interface Department {
 }
 
 export default function AdminDashboard() {
+  const { profile, loading: profileLoading } = useProfile();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'depts'>('stats');
   const [newDeptName, setNewDeptName] = useState('');
   const [newDeptDesc, setNewDeptDesc] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!profileLoading && (!profile || profile.role !== 'admin')) {
+        if (profile?.role === 'student') navigate('/student');
+        else if (profile?.role === 'staff') navigate('/staff');
+        else if (!profile) navigate('/login');
+    }
+  }, [profile, profileLoading, navigate]);
+
+  useEffect(() => {
+    if (profile?.role === 'admin') {
+        fetchData();
+    } else if (!profileLoading) {
+        setLoading(false);
+    }
+  }, [profile, profileLoading]);
 
   const fetchData = async () => {
-    const { data: profiles } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-    const { data: depts } = await supabase.from('departments').select('*').order('name');
-    
-    if (profiles) setUsers(profiles as UserProfile[]);
-    if (depts) setDepartments(depts as Department[]);
+    try {
+      setLoading(true);
+      const { data: profiles } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      const { data: depts } = await supabase.from('departments').select('*').order('name');
+      
+      if (profiles) setUsers(profiles as UserProfile[]);
+      if (depts) setDepartments(depts as Department[]);
+    } catch (error) {
+      console.error('Error fetching admin data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const exportToCSV = () => {

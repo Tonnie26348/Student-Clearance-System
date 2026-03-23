@@ -12,6 +12,8 @@ import {
   CardContent,
 } from "src/components/ui/card"
 
+import { useNavigate } from 'react-router-dom';
+
 interface StudentRequest {
   id: string; // clearance_status id
   status: 'pending' | 'approved' | 'rejected';
@@ -29,12 +31,21 @@ interface StudentRequest {
 }
 
 export default function StaffDashboard() {
-  const { profile } = useProfile();
+  const { profile, loading: profileLoading } = useProfile();
   const [requests, setRequests] = useState<StudentRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [deptName, setDeptName] = useState<string>('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profileLoading && (!profile || profile.role !== 'staff')) {
+        if (profile?.role === 'student') navigate('/student');
+        else if (profile?.role === 'admin') navigate('/admin');
+        else if (!profile) navigate('/login');
+    }
+  }, [profile, profileLoading, navigate]);
 
   useEffect(() => {
     if (profile?.department_id) {
@@ -54,8 +65,10 @@ export default function StaffDashboard() {
         return () => {
             supabase.removeChannel(channel);
         };
+    } else if (!profileLoading) {
+        setLoading(false);
     }
-  }, [profile]);
+  }, [profile, profileLoading]);
 
   useEffect(() => {
       if (profile?.department_id) {
