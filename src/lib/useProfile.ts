@@ -6,6 +6,7 @@ export type Profile = {
   id: string;
   full_name: string | null;
   reg_number: string | null;
+  email: string | null;
   role: 'student' | 'staff' | 'admin';
   department_id: string | null;
 };
@@ -15,32 +16,33 @@ export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchProfile = async () => {
     if (!user) {
-      setProfile(null);
-      setLoading(false);
-      return;
+        setProfile(null);
+        setLoading(false);
+        return;
     }
 
-    const fetchProfile = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
-        if (error) throw error;
-        setProfile(data as Profile);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      if (error) throw error;
+      setProfile(data as Profile);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProfile();
   }, [user]);
 
-  return { profile, loading };
+  return { profile, loading, refreshProfile: fetchProfile };
 }

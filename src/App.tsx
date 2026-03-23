@@ -5,6 +5,10 @@ import SignUp from './pages/SignUp';
 import StudentDashboard from './pages/StudentDashboard';
 import StaffDashboard from './pages/StaffDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
+import Requests from './pages/Requests';
+import Settings from './pages/Settings';
+import Landing from './pages/Landing';
 import { Toaster } from 'sonner';
 import { AnimatePresence } from 'framer-motion';
 import { isConfigured } from './lib/supabase';
@@ -28,12 +32,16 @@ function App() {
       <Router>
         <AnimatePresence mode="wait">
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/staff" element={<StaffDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/requests" element={<Requests />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>
       </Router>

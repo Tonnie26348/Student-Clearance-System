@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   full_name TEXT,
   reg_number TEXT,
+  email TEXT,
   role TEXT CHECK (role IN ('student', 'staff', 'admin')) DEFAULT 'student',
   department_id UUID, -- For staff (which department they manage)
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -107,12 +108,13 @@ CREATE TRIGGER tr_create_clearance_statuses
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, reg_number, role)
+  INSERT INTO public.profiles (id, full_name, reg_number, role, email)
   VALUES (
     NEW.id, 
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''), 
     COALESCE(NEW.raw_user_meta_data->>'reg_number', ''), 
-    COALESCE(NEW.raw_user_meta_data->>'role', 'student')
+    COALESCE(NEW.raw_user_meta_data->>'role', 'student'),
+    NEW.email
   );
   RETURN NEW;
 END;

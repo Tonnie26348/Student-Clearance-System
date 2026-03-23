@@ -7,7 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Settings,
+  Settings as SettingsIcon,
   User,
   FileText,
   GraduationCap
@@ -30,13 +30,14 @@ import {
 import { useAuth } from "src/lib/AuthContext"
 import { useProfile } from "src/lib/useProfile"
 import { cn } from "src/lib/utils"
+import { NotificationPanel } from "./NotificationPanel"
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { profile } = useProfile(); // Assume useProfile returns loading state too if needed
+  const { profile } = useProfile();
   const { signOut, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,20 +59,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </Link>
   );
 
+  const getHomePath = () => {
+    if (profile?.role === 'admin') return '/admin';
+    if (profile?.role === 'staff') return '/staff';
+    return '/student';
+  };
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr]">
       {/* Desktop Sidebar */}
       <div className="hidden border-r bg-background md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <Link to="/" className="flex items-center gap-2 font-semibold text-primary">
+            <Link to={getHomePath()} className="flex items-center gap-2 font-semibold text-primary">
               <GraduationCap className="h-6 w-6" />
               <span className="text-lg tracking-tight">ClearanceHub</span>
             </Link>
-            <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-muted-foreground hover:text-foreground">
-              <Bell className="h-4 w-4" />
-              <span className="sr-only">Toggle notifications</span>
-            </Button>
+            <div className="ml-auto">
+                <NotificationPanel />
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto py-2">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 gap-1">
@@ -82,14 +88,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               )}
               
               {profile?.role === 'admin' && (
-                <NavLink to="/admin" icon={Settings} label="Admin Control" />
+                <NavLink to="/admin" icon={SettingsIcon} label="Admin Control" />
               )}
 
               <div className="my-2 border-t border-border/50" />
               
               <NavLink to="/profile" icon={User} label="My Profile" />
               <NavLink to="/requests" icon={FileText} label="My Requests" />
-              <NavLink to="/settings" icon={Settings} label="Settings" />
+              <NavLink to="/settings" icon={SettingsIcon} label="Settings" />
             </nav>
           </div>
           <div className="mt-auto p-4 border-t">
@@ -123,7 +129,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <SheetContent side="left" className="flex flex-col w-[280px] sm:w-[300px]">
               <nav className="grid gap-2 text-lg font-medium">
                 <Link
-                  to="#"
+                  to={getHomePath()}
                   className="flex items-center gap-2 text-lg font-semibold text-primary mb-4"
                 >
                   <GraduationCap className="h-6 w-6" />
@@ -134,15 +140,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <NavLink to="/staff" icon={LayoutDashboard} label="Staff Portal" />
                 )}
                 {profile?.role === 'admin' && (
-                  <NavLink to="/admin" icon={Settings} label="Admin Control" />
+                  <NavLink to="/admin" icon={SettingsIcon} label="Admin Control" />
                 )}
                  <NavLink to="/profile" icon={User} label="Profile" />
+                 <NavLink to="/requests" icon={FileText} label="Requests" />
+                 <NavLink to="/settings" icon={SettingsIcon} label="Settings" />
               </nav>
             </SheetContent>
           </Sheet>
           
           <div className="w-full flex-1">
-            {/* Search could go here if needed, keeping it clean for now */}
+          </div>
+
+          <div className="md:hidden">
+            <NotificationPanel />
           </div>
           
           <DropdownMenu>
@@ -160,7 +171,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/settings')}>
-                <Settings className="mr-2 h-4 w-4" />
+                <SettingsIcon className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -178,3 +189,4 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </div>
   )
 }
+
