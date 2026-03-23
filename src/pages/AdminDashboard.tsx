@@ -163,6 +163,12 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
+        {loading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        ) : (
+            <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Administrative Console</h1>
@@ -419,6 +425,8 @@ export default function AdminDashboard() {
                     ))}
                 </div>
             </div>
+        )}
+            </>
         )}
       </div>
     </DashboardLayout>

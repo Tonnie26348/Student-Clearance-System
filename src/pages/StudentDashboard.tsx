@@ -6,6 +6,7 @@ import { Download, PlayCircle, Upload, FileText, CheckCircle2, Clock, XCircle, A
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "src/components/ui/button"
 import {
   Card,
@@ -23,12 +24,15 @@ import { Progress } from "src/components/ui/progress"
 interface ClearanceStatus {
   id: string; department: { name: string }; status: 'pending' | 'approved' | 'rejected'; comments: string | null; attachment_url?: string | null;
 }
+
 export default function StudentDashboard() {
   const { user, loading: authLoading } = useAuth();
   const [statuses, setStatuses] = useState<ClearanceStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [profile, setProfile] = useState({ full_name: '', reg_number: '' });
+  const [uploading, setUploading] = useState<string | null>(null);
   const navigate = useNavigate();
-  // ... rest of state ...
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login');
