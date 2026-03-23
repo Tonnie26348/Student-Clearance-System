@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from 'src/components/ui/button';
-import { GraduationCap, CheckCircle2, ShieldCheck, Zap, ArrowRight, Github } from 'lucide-react';
+import { GraduationCap, CheckCircle2, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Landing() {
@@ -42,13 +42,10 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="space-x-4"
+                className="flex justify-center"
               >
                 <Button size="lg" onClick={() => navigate('/signup')} className="gap-2">
                   Start Your Clearance <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => window.open('https://github.com/Tonnie26348/Student-Clearance-System', '_blank')} className="gap-2">
-                   <Github className="h-4 w-4" /> View Repository
                 </Button>
               </motion.div>
             </div>
