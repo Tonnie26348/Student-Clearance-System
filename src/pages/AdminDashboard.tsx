@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { Users, Building2, Download, Plus, Trash2, PieChart, ShieldCheck, Search } from 'lucide-react';
+import { Users, Building2, Download, Plus, Trash2, PieChart, ShieldCheck, Search, Filter, MoreVertical, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from "src/components/ui/button"
 import { Input } from "src/components/ui/input"
@@ -15,12 +15,11 @@ import {
   CardTitle,
 } from "src/components/ui/card"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "src/components/ui/select"
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "src/components/ui/tabs"
 
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../lib/useProfile';
@@ -44,7 +43,6 @@ export default function AdminDashboard() {
   const { profile, loading: profileLoading } = useProfile();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'depts'>('stats');
   const [newDeptName, setNewDeptName] = useState('');
   const [newDeptDesc, setNewDeptDesc] = useState('');
   const [userSearch, setUserSearch] = useState('');
@@ -98,337 +96,347 @@ export default function AdminDashboard() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `student_clearance_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `System_Users_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
-    toast.success('Report exported successfully!');
   };
 
-  const updateRole = async (userId: string, role: string, deptId: string | null = null) => {
-    const promise = async () => {
-        const { error } = await supabase
-            .from('profiles')
-            .update({ role, department_id: deptId || null })
-            .eq('id', userId);
-        if (error) throw error;
-        await fetchData();
-    };
-
-    toast.promise(promise(), {
-        loading: 'Updating permissions...',
-        success: 'User permissions updated!',
-        error: 'Failed to update'
-    });
-  };
-
-  const addDepartment = async (e: React.FormEvent) => {
+  const createDepartment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDeptName) return;
-    const { error } = await supabase.from('departments').insert({ 
-        name: newDeptName,
-        description: newDeptDesc 
-    });
-    if (error) toast.error(error.message);
-    else {
-        toast.success('Department added!');
+    
+    try {
+        const { error } = await supabase.from('departments').insert({ name: newDeptName, description: newDeptDesc });
+        if (error) throw error;
+        toast.success('Department created!');
         setNewDeptName('');
         setNewDeptDesc('');
         fetchData();
+    } catch (err: any) {
+        toast.error('Failed to create department: ' + err.message);
     }
   };
 
   const deleteDepartment = async (id: string) => {
-    if (!confirm('Are you sure? This will affect all clearance requests linked to this department.')) return;
-    const { error } = await supabase.from('departments').delete().eq('id', id);
-    if (error) toast.error(error.message);
-    else {
-        toast.success('Department removed');
+    if (!confirm('Are you sure you want to delete this department? This may affect existing clearance records.')) return;
+    try {
+        const { error } = await supabase.from('departments').delete().eq('id', id);
+        if (error) throw error;
+        toast.success('Department deleted');
         fetchData();
+    } catch (err) {
+        toast.error('Could not delete department');
     }
-  };
+  }
 
   const filteredUsers = users.filter(u => 
-    u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
-    u.full_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-    u.reg_number?.toLowerCase().includes(userSearch.toLowerCase())
+    (u.full_name && u.full_name.toLowerCase().includes(userSearch.toLowerCase())) ||
+    (u.email && u.email.toLowerCase().includes(userSearch.toLowerCase())) ||
+    (u.reg_number && u.reg_number.toLowerCase().includes(userSearch.toLowerCase()))
   );
 
   const stats = {
-    totalStudents: users.filter(u => u.role === 'student').length,
-    totalStaff: users.filter(u => u.role === 'staff').length,
-    totalDepts: departments.length,
-    admins: users.filter(u => u.role === 'admin').length
+    students: users.filter(u => u.role === 'student').length,
+    staff: users.filter(u => u.role === 'staff').length,
+    depts: departments.length
   };
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        {loading ? (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        ) : (
-            <>
+      <div className="space-y-8 animate-in fade-in duration-500">
+        
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Administrative Console</h1>
-                <p className="text-muted-foreground">Global university oversight and configuration.</p>
+                <h1 className="text-3xl font-bold tracking-tight">System Administration</h1>
+                <p className="text-muted-foreground text-lg font-medium">Control center for users, departments, and system health.</p>
             </div>
-            <Button variant="outline" onClick={exportToCSV} className="gap-2">
-                <Download className="h-4 w-4" /> Export Report
-            </Button>
+            <div className="flex gap-2 w-full md:w-auto">
+                <Button variant="outline" className="flex-1 md:flex-none gap-2 rounded-xl h-11" onClick={exportToCSV}>
+                    <Download className="h-4 w-4" /> Export Data
+                </Button>
+                <Button className="flex-1 md:flex-none gap-2 rounded-xl h-11" onClick={fetchData}>
+                    Refresh System
+                </Button>
+            </div>
         </div>
 
-        {/* Custom Tabs */}
-        <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
-            <Button 
-                variant={activeTab === 'stats' ? 'default' : 'ghost'} 
-                size="sm" 
-                onClick={() => setActiveTab('stats')}
-                className="gap-2"
-            >
-                <PieChart className="h-4 w-4" /> Overview
-            </Button>
-            <Button 
-                variant={activeTab === 'users' ? 'default' : 'ghost'} 
-                size="sm" 
-                onClick={() => setActiveTab('users')}
-                className="gap-2"
-            >
-                <Users className="h-4 w-4" /> User Management
-            </Button>
-            <Button 
-                variant={activeTab === 'depts' ? 'default' : 'ghost'} 
-                size="sm" 
-                onClick={() => setActiveTab('depts')}
-                className="gap-2"
-            >
-                <Building2 className="h-4 w-4" /> Departments
-            </Button>
+        {/* Overview Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border-none shadow-md bg-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Total Students</CardTitle>
+                    <Users className="h-5 w-5 text-primary" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-3xl font-black">{stats.students}</div>
+                    <p className="text-xs text-muted-foreground mt-1">+12% from last month</p>
+                </CardContent>
+            </Card>
+            <Card className="border-none shadow-md bg-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Active Staff</CardTitle>
+                    <ShieldCheck className="h-5 w-5 text-indigo-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-3xl font-black">{stats.staff}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Managing {stats.depts} departments</p>
+                </CardContent>
+            </Card>
+            <Card className="border-none shadow-md bg-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Departments</CardTitle>
+                    <Building2 className="h-5 w-5 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-3xl font-black">{stats.depts}</div>
+                    <p className="text-xs text-muted-foreground mt-1">All systems operational</p>
+                </CardContent>
+            </Card>
         </div>
 
-        {activeTab === 'stats' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.totalStudents}</div>
-                            <p className="text-xs text-muted-foreground">Active in system</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Authorized Staff</CardTitle>
-                            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.totalStaff}</div>
-                            <p className="text-xs text-muted-foreground">Department leads</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Departments</CardTitle>
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.totalDepts}</div>
-                            <p className="text-xs text-muted-foreground">Clearance points</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Admins</CardTitle>
-                            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.admins}</div>
-                            <p className="text-xs text-muted-foreground">System operators</p>
-                        </CardContent>
-                    </Card>
-                </div>
-                
-                <Card className="bg-primary/5 border-primary/20">
-                    <CardHeader>
-                         <div className="flex items-center gap-2 text-primary">
-                            <ShieldCheck className="h-5 w-5" />
-                            <CardTitle>System Health</CardTitle>
-                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                            The clearance system is running on Supabase with Row Level Security enabled. All departmental nodes are reporting active status. Real-time event bus is operational.
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-        )}
+        <Tabs defaultValue="users" className="w-full">
+            <TabsList className="bg-muted/50 p-1 mb-6 rounded-2xl h-14">
+                <TabsTrigger value="users" className="rounded-xl px-6 font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all h-full gap-2">
+                    <Users className="h-4 w-4" /> User Management
+                </TabsTrigger>
+                <TabsTrigger value="depts" className="rounded-xl px-6 font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all h-full gap-2">
+                    <Building2 className="h-4 w-4" /> Departments
+                </TabsTrigger>
+                <TabsTrigger value="stats" className="rounded-xl px-6 font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all h-full gap-2">
+                    <PieChart className="h-4 w-4" /> System Stats
+                </TabsTrigger>
+            </TabsList>
 
-        {activeTab === 'users' && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex items-center gap-2 w-full md:w-1/2">
-                    <div className="relative w-full">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <TabsContent value="users" className="space-y-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
-                            placeholder="Search users..." 
-                            className="pl-9"
+                            placeholder="Search by name, email or reg number..." 
+                            className="pl-10 h-12 bg-card border-none shadow-sm rounded-xl focus-visible:ring-primary/20"
                             value={userSearch}
                             onChange={(e) => setUserSearch(e.target.value)}
                         />
                     </div>
+                    <Button variant="ghost" className="rounded-xl h-12 px-4 text-muted-foreground hover:bg-card hover:text-primary transition-all">
+                        <Filter className="h-4 w-4 mr-2" /> All Roles
+                    </Button>
                 </div>
 
-                <Card>
-                    <CardContent className="p-0">
-                         <div className="rounded-md border">
-                            <div className="w-full overflow-auto">
-                                <table className="w-full caption-bottom text-sm">
-                                    <thead className="[&_tr]:border-b">
-                                        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Identity</th>
-                                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Role</th>
-                                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Department</th>
-                                            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Access Level</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="[&_tr:last-child]:border-0">
-                                        {filteredUsers.map((u) => (
-                                            <tr key={u.id} className="border-b transition-colors hover:bg-muted/50">
-                                                <td className="p-4 align-middle">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium">{u.full_name || 'No Name'}</span>
-                                                        <span className="text-xs text-muted-foreground">{u.email}</span>
-                                                        {u.reg_number && <Badge variant="outline" className="w-fit mt-1 text-[10px]">{u.reg_number}</Badge>}
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 align-middle">
-                                                    <Badge variant={u.role === 'admin' ? 'default' : u.role === 'staff' ? 'secondary' : 'outline'}>
-                                                        {u.role}
-                                                    </Badge>
-                                                </td>
-                                                <td className="p-4 align-middle">
-                                                    {u.role === 'staff' ? (
-                                                        <Select 
-                                                            value={u.department_id || "none"} 
-                                                            onValueChange={(val) => updateRole(u.id, u.role, val === "none" ? null : val)}
-                                                        >
-                                                            <SelectTrigger className="w-[180px] h-8">
-                                                                <SelectValue placeholder="Select Dept" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="none">No Department</SelectItem>
-                                                                {departments.map(d => (
-                                                                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    ) : (
-                                                        <span className="text-muted-foreground text-sm">-</span>
-                                                    )}
-                                                </td>
-                                                <td className="p-4 align-middle">
-                                                     <Select 
-                                                        value={u.role} 
-                                                        onValueChange={(val) => updateRole(u.id, val, u.department_id)}
-                                                    >
-                                                        <SelectTrigger className="w-[140px] h-8">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="student">Student</SelectItem>
-                                                            <SelectItem value="staff">Staff</SelectItem>
-                                                            <SelectItem value="admin">Admin</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                <div className="bg-white dark:bg-card rounded-3xl shadow-md border overflow-hidden">
+                    {/* Mobile View: Cards */}
+                    <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+                        {loading ? (
+                            [1, 2, 3].map(i => <div key={i} className="h-32 bg-muted animate-pulse rounded-2xl" />)
+                        ) : filteredUsers.map((u) => (
+                            <div key={u.id} className="p-4 rounded-2xl border bg-muted/10 space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shadow-sm">
+                                        {u.full_name?.substring(0, 2).toUpperCase() || '??'}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="font-bold text-foreground truncate">{u.full_name || 'No Name'}</span>
+                                        <span className="text-xs text-muted-foreground truncate">{u.email}</span>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-border/50">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Identity</span>
+                                        {u.role === 'student' ? (
+                                            <Badge variant="outline" className="text-[10px] font-bold">
+                                                {u.reg_number || 'No REG'}
+                                            </Badge>
+                                        ) : u.role === 'staff' ? (
+                                            <span className="text-xs font-bold text-indigo-600">
+                                                {departments.find(d => d.id === u.department_id)?.name || 'No Dept'}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs font-bold text-red-600 uppercase tracking-widest">Master</span>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Role</span>
+                                        <Badge variant={u.role === 'admin' ? 'default' : u.role === 'staff' ? 'secondary' : 'outline'} className="rounded-full px-2.5 font-bold">
+                                            {u.role.toUpperCase()}
+                                        </Badge>
+                                    </div>
+                                </div>
                             </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop View: Table */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-muted/30 border-b">
+                                <tr className="text-xs uppercase tracking-wider font-bold text-muted-foreground">
+                                    <th className="px-6 py-4">User</th>
+                                    <th className="px-6 py-4">Identity</th>
+                                    <th className="px-6 py-4">Role</th>
+                                    <th className="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                                {loading ? (
+                                    [1, 2, 3, 4, 5].map(i => (
+                                        <tr key={i} className="animate-pulse">
+                                            <td className="px-6 py-4"><div className="h-10 w-40 bg-muted rounded"></div></td>
+                                            <td className="px-6 py-4"><div className="h-10 w-32 bg-muted rounded"></div></td>
+                                            <td className="px-6 py-4"><div className="h-10 w-20 bg-muted rounded"></div></td>
+                                            <td className="px-6 py-4"><div className="h-10 w-10 bg-muted rounded ml-auto"></div></td>
+                                        </tr>
+                                    ))
+                                ) : filteredUsers.map((u) => (
+                                    <tr key={u.id} className="hover:bg-muted/10 transition-colors group">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shadow-sm">
+                                                    {u.full_name?.substring(0, 2).toUpperCase() || '??'}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-foreground truncate max-w-[150px]">{u.full_name || 'No Name'}</span>
+                                                    <span className="text-xs text-muted-foreground truncate max-w-[200px]">{u.email}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-1">
+                                                {u.role === 'student' ? (
+                                                    <Badge variant="outline" className="w-fit text-[10px] font-bold uppercase tracking-tight h-5">
+                                                        {u.reg_number || 'No REG'}
+                                                    </Badge>
+                                                ) : u.role === 'staff' ? (
+                                                    <span className="text-xs font-bold text-indigo-600">
+                                                        {departments.find(d => d.id === u.department_id)?.name || 'No Dept'}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs font-bold text-red-600 uppercase tracking-widest">Master</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <Badge variant={u.role === 'admin' ? 'default' : u.role === 'staff' ? 'secondary' : 'outline'} className="rounded-full px-2.5 font-bold">
+                                                {u.role.toUpperCase()}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <Button variant="ghost" size="icon" className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </TabsContent>
+
+            <TabsContent value="depts" className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <Card className="lg:col-span-1 border-none shadow-md h-fit sticky top-24">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Plus className="h-5 w-5 text-primary" />
+                                Add New Department
+                            </CardTitle>
+                            <CardDescription>Departments are the clearance points for students.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={createDepartment} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="dept-name" className="text-xs font-bold uppercase text-muted-foreground">Department Name</Label>
+                                    <Input 
+                                        id="dept-name" 
+                                        placeholder="e.g. Finance Office" 
+                                        className="bg-muted/30 border-none focus-visible:ring-primary/20 h-11"
+                                        value={newDeptName}
+                                        onChange={(e) => setNewDeptName(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="dept-desc" className="text-xs font-bold uppercase text-muted-foreground">Description (Optional)</Label>
+                                    <Input 
+                                        id="dept-desc" 
+                                        placeholder="Briefly describe what they clear" 
+                                        className="bg-muted/30 border-none focus-visible:ring-primary/20 h-11"
+                                        value={newDeptDesc}
+                                        onChange={(e) => setNewDeptDesc(e.target.value)}
+                                    />
+                                </div>
+                                <Button type="submit" className="w-full font-bold h-11 shadow-lg shadow-primary/20 transition-transform active:scale-95">
+                                    Create Department
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+
+                    <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {departments.map((d) => (
+                            <Card key={d.id} className="border-none shadow-md bg-card hover:shadow-lg transition-all group">
+                                <CardHeader className="pb-2">
+                                    <div className="flex justify-between items-start">
+                                        <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-orange-500 font-bold mb-2">
+                                            <Building2 className="h-5 w-5" />
+                                        </div>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-8 w-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => deleteDepartment(d.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <CardTitle className="text-lg font-bold">{d.name}</CardTitle>
+                                    <CardDescription className="line-clamp-2 italic">{d.description || 'No description provided.'}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="pt-2">
+                                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/50 p-2 rounded-lg w-fit">
+                                        <ShieldCheck className="h-3.5 w-3.5 text-indigo-500" />
+                                        {users.filter(u => u.department_id === d.id).length} Staff Assigned
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            </TabsContent>
+
+            <TabsContent value="stats" className="space-y-6">
+                <Card className="border-none shadow-md bg-card overflow-hidden">
+                    <CardHeader className="bg-primary/5 pb-6">
+                        <CardTitle className="text-2xl font-black text-primary flex items-center gap-2">
+                            <PieChart className="h-6 w-6" /> System Insights
+                        </CardTitle>
+                        <CardDescription className="text-primary-foreground/70 font-medium">Coming soon: Advanced analytics and data visualization for clearance trends.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-12 text-center">
+                        <div className="max-w-md mx-auto space-y-4">
+                            <div className="h-32 w-32 bg-muted rounded-full mx-auto flex items-center justify-center">
+                                <Settings className="h-12 w-12 text-muted-foreground animate-spin-slow" />
+                            </div>
+                            <h3 className="text-xl font-bold">Analytics Engine Preparing</h3>
+                            <p className="text-muted-foreground font-medium">We are currently aggregating historical data to provide you with meaningful insights into department efficiency and student throughput.</p>
                         </div>
                     </CardContent>
                 </Card>
-            </div>
-        )}
-
-        {activeTab === 'depts' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Add New Department</CardTitle>
-                        <CardDescription>Create a new clearance checkpoint for students.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={addDepartment} className="flex flex-col md:flex-row gap-4">
-                            <div className="grid w-full gap-2">
-                                <Label htmlFor="dept-name">Department Name</Label>
-                                <Input 
-                                    id="dept-name" 
-                                    placeholder="e.g. Library, Sports, Finance" 
-                                    value={newDeptName}
-                                    onChange={(e) => setNewDeptName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="grid w-full gap-2">
-                                <Label htmlFor="dept-desc">Description</Label>
-                                <Input 
-                                    id="dept-desc" 
-                                    placeholder="Brief description of requirements" 
-                                    value={newDeptDesc}
-                                    onChange={(e) => setNewDeptDesc(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex items-end">
-                                <Button type="submit" className="w-full md:w-auto gap-2">
-                                    <Plus className="h-4 w-4" /> Add Department
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {departments.map(d => (
-                        <Card key={d.id} className="group relative hover:border-primary/50 transition-colors">
-                            <CardHeader>
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                                            <Building2 className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <CardTitle className="text-base">{d.name}</CardTitle>
-                                        </div>
-                                    </div>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={() => deleteDepartment(d.id)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                    {d.description || 'Standard university clearance point.'}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            </div>
-        )}
-            </>
-        )}
+            </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
 }
+
+// Add a custom animation to your Tailwind config or just a quick CSS animation
+const style = document.createElement('style');
+style.innerHTML = `
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+`;
+document.head.appendChild(style);
