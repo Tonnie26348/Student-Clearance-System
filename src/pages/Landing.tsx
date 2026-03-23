@@ -39,12 +39,12 @@ export default function Landing() {
                 <Badge className="bg-primary/10 text-primary border-none hover:bg-primary/20 px-4 py-1.5 text-xs font-bold uppercase tracking-widest mb-4 inline-flex items-center gap-2 animate-bounce">
                   <Star className="h-3 w-3 fill-primary" /> #1 Rated University Logistics Platform
                 </Badge>
-                <h1 className="text-5xl font-black tracking-tighter sm:text-7xl md:text-8xl lg:text-9xl/none text-balance leading-[0.9]">
-                  Fast-Track Your <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-600">Graduation.</span>
+                <h1 className="text-5xl font-black tracking-tighter sm:text-7xl md:text-8xl/none text-balance leading-[0.9]">
+                  Digital Student <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-600 tracking-tight">Clearance System.</span>
                 </h1>
                 <p className="mx-auto lg:mx-0 max-w-[600px] text-muted-foreground md:text-2xl font-medium leading-relaxed">
-                  Join 50,000+ students nationwide. The most advanced, paperless clearance solution built for modern universities.
+                  Streamline your university exit process with our automated, secure, and paperless clearance platform.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-4">
                   <Button size="lg" onClick={() => navigate('/signup')} className="h-16 px-10 text-lg font-black rounded-[2rem] gap-3 shadow-2xl shadow-primary/30 group bg-primary hover:bg-primary/90 transition-all">
@@ -93,20 +93,6 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Logo Bar */}
-        <section className="w-full py-12 border-y bg-muted/20 backdrop-blur-sm overflow-hidden">
-            <div className="container px-4 mx-auto">
-                <p className="text-center text-xs font-black uppercase tracking-[0.3em] text-muted-foreground mb-10">Powering Leading Institutions</p>
-                <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-                    {["Greenwood University", "Tech Institute", "State College", "Summit Academy", "Blue River Poly"].map((name) => (
-                        <div key={name} className="flex items-center gap-2 font-black text-xl tracking-tighter whitespace-nowrap">
-                            <div className="h-8 w-8 rounded-lg bg-foreground" />
-                            {name}
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
 
         {/* Clearance at a Glance - Bento Grid */}
         <section className="w-full py-32 bg-background relative overflow-hidden">
