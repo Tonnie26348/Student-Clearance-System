@@ -36,9 +36,6 @@ export default function Landing() {
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="flex-1 space-y-8 text-center lg:text-left"
               >
-                <Badge className="bg-primary/10 text-primary border-none hover:bg-primary/20 px-4 py-1.5 text-xs font-bold uppercase tracking-widest mb-4 inline-flex items-center gap-2 animate-bounce">
-                  <Star className="h-3 w-3 fill-primary" /> #1 Rated University Logistics Platform
-                </Badge>
                 <h1 className="text-5xl font-black tracking-tighter sm:text-7xl md:text-8xl/none text-balance leading-[0.9]">
                   Digital Student <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-600 tracking-tight">Clearance System.</span>
