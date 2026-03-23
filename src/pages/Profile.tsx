@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
 import { useProfile } from '../lib/useProfile';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { User, Mail, Shield, Building, Loader2, Save } from 'lucide-react';
+import { Mail, Shield, Building, Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from "src/components/ui/button"
 import { Input } from "src/components/ui/input"

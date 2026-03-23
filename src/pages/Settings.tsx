@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { Lock, Bell, Palette, ShieldCheck, Loader2 } from 'lucide-react';
+import { Lock, Palette, ShieldCheck, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from "src/components/ui/button"
 import { Input } from "src/components/ui/input"

@@ -1,7 +1,6 @@
 import { type ReactNode } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
-  Bell,
   CircleUser,
   Home,
   LayoutDashboard,

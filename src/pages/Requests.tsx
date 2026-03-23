@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
 import { useProfile } from '../lib/useProfile';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { FileText, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { FileText, Clock, Loader2 } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -21,7 +21,7 @@ interface Request {
 
 export default function Requests() {
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile } = useProfile();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
 
