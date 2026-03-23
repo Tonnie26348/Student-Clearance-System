@@ -149,6 +149,7 @@ export default function SignUp() {
                         <SelectContent className="rounded-xl border-none shadow-xl">
                             <SelectItem value="student" className="font-bold py-3">Student</SelectItem>
                             <SelectItem value="staff" className="font-bold py-3">Staff Member</SelectItem>
+                            <SelectItem value="admin" className="font-bold py-3">Administrator</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -156,11 +157,11 @@ export default function SignUp() {
 
             <div className="space-y-2">
                 <Label htmlFor="reg-number" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-2">
-                    <Hash className="h-3 w-3" /> {role === 'student' ? 'Registration Number' : 'Employee ID'}
+                    <Hash className="h-3 w-3" /> {role === 'student' ? 'Registration Number' : role === 'staff' ? 'Employee ID' : 'Admin ID'}
                 </Label>
                 <Input 
                     id="reg-number" 
-                    placeholder={role === 'student' ? 'EB1/12345/21' : 'STF/001'} 
+                    placeholder={role === 'student' ? 'EB1/12345/21' : role === 'staff' ? 'STF/001' : 'ADM/001'} 
                     value={regNumber}
                     onChange={(e) => setRegNumber(e.target.value)}
                     required 
