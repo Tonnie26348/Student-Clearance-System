@@ -1,44 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 
-const rawUrl = import.meta.env.VITE_SUPABASE_URL;
-const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-/**
- * Aggressively cleans strings of all whitespace, newlines, and hidden characters 
- * (like zero-width spaces) which frequently cause fetch "Invalid value" errors.
- */
-const clean = (str: string | undefined) => str ? str.replace(/[\s\u200B-\u200D\uFEFF]/g, '') : '';
-
-const supabaseUrl = clean(rawUrl);
-const supabaseAnonKey = clean(rawKey);
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
 export const isConfigured = Boolean(
     supabaseUrl && 
     supabaseAnonKey && 
-    supabaseUrl.length > 10 && 
-    supabaseUrl.startsWith('http') &&
-    supabaseUrl.includes('.supabase.co')
+    supabaseUrl.startsWith('http')
 );
 
-// Diagnostic logging for debugging "Invalid value" fetch errors
-if (isConfigured) {
-    console.log('🚀 Supabase client initialized:', {
-        urlLength: supabaseUrl.length,
-        keyLength: supabaseAnonKey.length,
-        urlValid: supabaseUrl.startsWith('https://')
+// Detailed logging for debugging (safe - doesn't leak keys)
+if (!isConfigured) {
+    console.warn('⚠️ Supabase Config Diagnostic:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseAnonKey,
+        urlValid: supabaseUrl.startsWith('http'),
+        urlValue: supabaseUrl ? supabaseUrl.substring(0, 10) + '...' : 'none'
     });
 } else {
-    console.warn('⚠️ Supabase configuration missing or invalid.');
+    console.log('🚀 Supabase initialized successfully.');
 }
 
 export const supabase = createClient(
     isConfigured ? supabaseUrl : 'https://placeholder.supabase.co', 
-    isConfigured ? supabaseAnonKey : 'placeholder-key',
-    {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-        }
-    }
+    isConfigured ? supabaseAnonKey : 'placeholder-key'
 );
