@@ -12,8 +12,8 @@ export function PublicLayout({ children }: PublicLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-background overflow-x-hidden">
-      {/* Navigation */}
-      <header className="px-6 lg:px-20 h-20 flex items-center border-b bg-background/60 backdrop-blur-xl sticky top-0 z-50 transition-all">
+      {/* Navigation - Fixed/Sticky Header */}
+      <header className="px-6 lg:px-20 h-20 flex items-center border-b bg-background/80 backdrop-blur-xl fixed top-0 left-0 right-0 z-[100] transition-all">
         <Link to="/" className="flex items-center gap-2.5 font-black text-2xl text-primary tracking-tight group cursor-pointer">
           <div className="bg-primary/10 p-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
             <GraduationCap className="h-7 w-7" />
@@ -31,7 +31,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         </nav>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pt-20">
         {children}
       </main>
 
